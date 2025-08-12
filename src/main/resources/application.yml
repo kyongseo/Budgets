@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: BudgetManagementProject
+  config:
+    import: optional:file:.env[.properties]
+  profiles:
+    active: local
+  jpa:
+    show-sql: true
+    database: postgresql
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 500
+        order_inserts: true
+        order_updates: true
+  security:
+    user:
+      name: disabled
+      password: disable
+
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    groups-order: desc
+    operations-sorter: method
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+
+
+server:
+  port: 9091
