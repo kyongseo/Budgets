@@ -1,7 +1,7 @@
 package ks.com.budgetmanagementproject.feature.role;
 
 import jakarta.persistence.*;
-import ks.com.budgetmanagementproject.feature.user.User;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,13 +21,9 @@ public class Role {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private String name;
 
     @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
-
-    public Role(String name) {
-        this.name = name;
-    }
 }
