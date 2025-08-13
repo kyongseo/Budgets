@@ -2,7 +2,7 @@ package ks.com.budgetmanagementproject.feature.budget;
 
 
 import jakarta.persistence.*;
-import ks.com.budgetmanagementproject.feature.user.User;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,8 +38,4 @@ public class Budget {
     private long money;
 
     private LocalDate period;
-
-    public void updateBudget(long money) {
-        this.money = money;
-    }
 }
