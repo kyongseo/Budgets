@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.token.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.token.RefreshToken;
-import ks.com.budgetmanagementproject.feature.user.LoginReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -80,7 +80,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUsername(username);
         refreshToken.setRefresh(refresh);
-        refreshToken.setExpiration(date.toString());
+        refreshToken.setExpiresAt(date.getTime());
 
         refreshRepository.save(refreshToken);
     }
