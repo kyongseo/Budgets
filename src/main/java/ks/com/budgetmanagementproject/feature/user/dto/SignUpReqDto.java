@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.user;
+package ks.com.budgetmanagementproject.feature.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

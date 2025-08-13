@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.user;
+package ks.com.budgetmanagementproject.feature.user.service;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -6,6 +6,12 @@ import jakarta.validation.Valid;
 import ks.com.budgetmanagementproject.feature.role.Role;
 import ks.com.budgetmanagementproject.feature.role.RoleRepository;
 import ks.com.budgetmanagementproject.feature.token.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.token.RefreshToken;
+import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
+import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,20 +74,28 @@ public class UserService {
 
         List<String> roles = user.get().getRoles().stream().map(Role::getName).collect(Collectors.toList());
 
-        String accessToken = jwtUtil.createAccessToken(user.get().getId(), user.get().getUsername(), roles, jwtUtil.ACCESS_TOKEN_EXPIRE_COUNT);
-        String refreshToken = jwtUtil.createRefreshToken(user.get().getId(), user.get().getUsername(), roles, jwtUtil.REFRESH_TOKEN_EXPIRE_COUNT);
+        String accessToken = jwtUtil.createAccessToken(user.get().getId(), user.get().getUsername(), roles, JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT);
+        String refreshToken = jwtUtil.createRefreshToken(user.get().getId(), user.get().getUsername(), roles, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
 
-        refreshRepository.saveRefreshToken(refreshToken, jwtUtil.REFRESH_TOKEN_EXPIRE_COUNT);
+        RefreshToken rt = RefreshToken.builder()
+                        .username(user.get().getUsername())
+                        .refresh(refreshToken)
+                        .expiresAt(System.currentTimeMillis() + JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT)
+                        .build();
+
+        refreshRepository.save(rt);
+
+        // refreshRepository.saveRefreshToken(refreshToken, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
 
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge(Math.toIntExact(jwtUtil.ACCESS_TOKEN_EXPIRE_COUNT / 1000));
+        accessTokenCookie.setMaxAge(Math.toIntExact(JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT / 1000));
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(Math.toIntExact(jwtUtil.REFRESH_TOKEN_EXPIRE_COUNT / 1000));
+        refreshTokenCookie.setMaxAge(Math.toIntExact(JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT / 1000));
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
