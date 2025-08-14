@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.budget;
+package ks.com.budgetmanagementproject.feature.budget.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

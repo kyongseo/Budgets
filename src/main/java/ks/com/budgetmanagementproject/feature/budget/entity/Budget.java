@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.budget;
+package ks.com.budgetmanagementproject.feature.budget.entity;
 
 
 import jakarta.persistence.*;
@@ -38,4 +38,8 @@ public class Budget {
     private long money;
 
     private LocalDate period;
+
+    public void updateBudget(long money) {
+        this.money = money;
+    }
 }
