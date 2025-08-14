@@ -41,9 +41,8 @@ public class SecurityConfig {
 
     String[] allAllowPage = new  String[] {
             "/",
-            "/users/signup",
-            "/reissue",
-            "/users/login"
+            "/users/**",
+            "/reissue"
     };
 
     String[] swaggerAllowPage = new  String[] {

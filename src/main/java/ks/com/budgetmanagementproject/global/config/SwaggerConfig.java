@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         info = @io.swagger.v3.oas.annotations.info.Info(
-                title = "Spring-toy-project-01 API Docs",
-                description = "Spring-toy-project-01 API 목록",
+                title = "Budget-Project API Docs",
+                description = "Budget-Project API 목록",
                 version = "v1"
         ),
         security = @SecurityRequirement(name = "bearer Authentication")
@@ -32,8 +32,8 @@ class SwaggerConfig {
 
         Info info = new Info()
                 .version("v1.0.0")
-                .title("Spring-toy-project-01 API")
-                .description("Spring-toy-project-01 API 입니다.");
+                .title("Budget-Project API")
+                .description("Budget-Project API 입니다.");
 
         return new OpenAPI()
                 .info(info);

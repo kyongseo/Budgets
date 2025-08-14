@@ -1,8 +1,8 @@
-package ks.com.budgetmanagementproject.feature.budget;
+package ks.com.budgetmanagementproject.feature.budget.entity;
 
 
 import jakarta.persistence.*;
-import ks.com.budgetmanagementproject.feature.user.User;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

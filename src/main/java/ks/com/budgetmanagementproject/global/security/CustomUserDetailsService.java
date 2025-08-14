@@ -1,7 +1,7 @@
 package ks.com.budgetmanagementproject.global.security;
 
-import ks.com.budgetmanagementproject.feature.user.User;
-import ks.com.budgetmanagementproject.feature.user.UserRepository;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;

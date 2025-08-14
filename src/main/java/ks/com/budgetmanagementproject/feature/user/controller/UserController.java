@@ -1,10 +1,13 @@
-package ks.com.budgetmanagementproject.feature.user;
+package ks.com.budgetmanagementproject.feature.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
+import ks.com.budgetmanagementproject.feature.user.service.UserService;
 import ks.com.budgetmanagementproject.global.security.AuthUtil;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +65,6 @@ public class UserController {
 
         Object principal = authentication.getPrincipal();
 
-        // 커스텀 UserDetails일 경우 캐스팅
         if (principal instanceof CustomUserDetails customUser) {
             return ResponseEntity.ok(Map.of(
                     "username", customUser.getUsername(),

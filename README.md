@@ -10,7 +10,7 @@
 
 ## Table of Contents
 - [개요](#개요)
-- [Skils](skils)
+- [Skils](#skils)
 - [ERD](#erd)
 - [프로젝트 설계 및 일정관리](#프로젝트-설계-및-일정관리)
 - [API Reference](#api-reference)
@@ -29,11 +29,13 @@
 ![Static Badge](https://img.shields.io/badge/SpringBoot-grean)
 ![Static Badge](https://img.shields.io/badge/SpringDataJPA-grean)
 <br/>
-데이터 베이스: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
+DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
+![Static Badge](https://img.shields.io/badge/Redis-yellow)
 
 <br/>
 
 ## ERD
+![img.png](img.png)
 
 <br/>
 

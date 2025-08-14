@@ -1,6 +1,6 @@
 package ks.com.budgetmanagementproject.global.security;
 
-import ks.com.budgetmanagementproject.feature.user.User;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

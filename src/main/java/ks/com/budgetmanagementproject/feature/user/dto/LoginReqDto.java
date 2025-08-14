@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.user;
+package ks.com.budgetmanagementproject.feature.user.dto;
 
 import lombok.Getter;
 import lombok.Setter;

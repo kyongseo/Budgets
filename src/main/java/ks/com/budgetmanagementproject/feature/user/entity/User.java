@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.user;
+package ks.com.budgetmanagementproject.feature.user.entity;
 
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.role.Role;
@@ -16,8 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(length = 50, nullable = false, unique = true)

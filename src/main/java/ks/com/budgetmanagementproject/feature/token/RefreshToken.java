@@ -13,8 +13,13 @@ public class RefreshToken {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String username;
-    private String refresh;
-    private String expiration;
 
+    @Column(nullable = false)
+    private String username;
+
+    @Column(nullable = false, unique = true, length = 512)
+    private String refresh;
+
+    @Column(name = "expires_at", nullable = false)
+    private Long  expiresAt;
 }

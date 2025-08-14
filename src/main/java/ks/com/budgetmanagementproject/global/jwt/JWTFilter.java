@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.role.Role;
 import ks.com.budgetmanagementproject.feature.role.RoleRepository;
-import ks.com.budgetmanagementproject.feature.user.User;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
