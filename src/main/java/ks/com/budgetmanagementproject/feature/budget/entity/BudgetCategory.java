@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "budget_category")
 public class BudgetCategory {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

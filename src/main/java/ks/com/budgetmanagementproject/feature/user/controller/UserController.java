@@ -32,7 +32,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "✅ 회원가입", description = "회원가입")
+    @Operation(operationId = "01-signup", summary = "✅ 회원가입", description = "회원가입")
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
         try {
@@ -45,7 +45,7 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "✅ 로그인", description = "로그인")
+    @Operation(operationId = "02-login", summary = "✅ 로그인", description = "로그인")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, BindingResult bindingResult, HttpServletResponse response) {
 
@@ -55,7 +55,7 @@ public class UserController {
         return userService.login(loginReqDto, response);
     }
 
-    @Operation(summary = "로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
+    @Operation(operationId = "03-currentUser", summary = "✅ 로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
     @GetMapping("/")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (!AuthUtil.isAuthenticated(authentication)) {

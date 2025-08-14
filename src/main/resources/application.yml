@@ -9,7 +9,8 @@ spring:
     show-sql: true
     database: postgresql
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
@@ -36,7 +37,8 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     groups-order: desc
-    operations-sorter: method
+    operations-sorter: alpha   # operationId 알파벳/숫자 순 정렬
+    tags-sorter: alpha
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
