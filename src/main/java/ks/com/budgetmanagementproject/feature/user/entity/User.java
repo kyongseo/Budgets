@@ -2,6 +2,7 @@ package ks.com.budgetmanagementproject.feature.user.entity;
 
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.role.Role;
+import ks.com.budgetmanagementproject.global.common.model.BaseTimeEntity;
 import lombok.*;
 
 import java.util.HashSet;
@@ -14,7 +15,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

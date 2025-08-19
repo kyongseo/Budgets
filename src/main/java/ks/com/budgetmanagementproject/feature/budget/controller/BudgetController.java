@@ -7,7 +7,7 @@ import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetService;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
-import ks.com.budgetmanagementproject.global.common.BaseResponse;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,15 +45,14 @@ public class BudgetController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 수정에 성공했습니다."));
     }
 
-//    @Operation(summary = "Budget 추천 API", responses = {
-//            @ApiResponse(responseCode = "200")
-//    })
-//    @Tag(name = "Budgets")
-//    @GetMapping("/recommend")
-//    public ResponseEntity<?> budgetRecommend(@RequestParam long totalAmount) {
-//        BudgetRecommendListResponse budgetRecommendListResponse = budgetService.budgetRecommend(totalAmount);
-//
-//        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 추천에 성공했습니다.", budgetRecommendListResponse));
-//    }
+    @Operation(operationId = "03-delete-budget", summary = "✅ 예산 삭제(soft)", responses = {
+            @ApiResponse(responseCode = "200")
+    })
+    @Tag(name = "Budgets")
+    @DeleteMapping("/{budgetId}")
+    public ResponseEntity<?> budgetSoftDelete(@PathVariable Long budgetId) {
+        budgetService.budgetSoftDelete(budgetId);
 
+        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
+    }
 }

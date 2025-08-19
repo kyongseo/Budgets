@@ -36,7 +36,7 @@ logging:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-    groups-order: desc
+    groups-order: asc
     operations-sorter: alpha   # operationId 알파벳/숫자 순 정렬
     tags-sorter: alpha
   default-consumes-media-type: application/json

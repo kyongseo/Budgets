@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetCategoryResponse;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetCategoryService;
-import ks.com.budgetmanagementproject.global.common.BaseResponse;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
