@@ -28,7 +28,7 @@ public class BudgetController {
     })
     @Tag(name = "Budgets")
     @PostMapping
-    public ResponseEntity<?> budgetSetting(@Validated @RequestBody BudgetSettingRequest request, @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> budgetSetting_endpoint(@Validated @RequestBody BudgetSettingRequest request, @AuthenticationPrincipal User user) {
         budgetService.budgetSetting(request, user);
 
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 설정에 성공했습니다."));
@@ -39,19 +39,30 @@ public class BudgetController {
     })
     @Tag(name = "Budgets")
     @PatchMapping("/{budgetId}")
-    public ResponseEntity<?> budgetUpdate(@PathVariable Long budgetId, @Validated @RequestBody BudgetUpdateRequest request, @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> budgetUpdate_endpoint(@PathVariable Long budgetId, @Validated @RequestBody BudgetUpdateRequest request, @AuthenticationPrincipal User user) {
         budgetService.budgetUpdate(budgetId, request, user);
 
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 수정에 성공했습니다."));
     }
 
-    @Operation(operationId = "03-delete-budget", summary = "✅ 예산 삭제(soft)", responses = {
+    @Operation(operationId = "03-soft-delete-budget", summary = "✅ 예산 삭제(soft)", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Budgets")
-    @DeleteMapping("/{budgetId}")
-    public ResponseEntity<?> budgetSoftDelete(@PathVariable Long budgetId) {
+    @DeleteMapping("/soft-delete/{budgetId}")
+    public ResponseEntity<?> budgetSoftDelete_endpoint(@PathVariable Long budgetId) {
         budgetService.budgetSoftDelete(budgetId);
+
+        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
+    }
+
+    @Operation(operationId = "04-hard-delete-budget", summary = "✅ 예산 삭제(hard)", responses = {
+            @ApiResponse(responseCode = "200")
+    })
+    @Tag(name = "Budgets")
+    @DeleteMapping("/hard-delete/{budgetId}")
+    public ResponseEntity<?> budgetHardDelete_endpoint(@PathVariable Long budgetId) {
+        budgetService.budgetHardDelete(budgetId);
 
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
     }

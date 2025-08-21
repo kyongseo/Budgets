@@ -1,6 +1,5 @@
 package ks.com.budgetmanagementproject.feature.budget.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
 import ks.com.budgetmanagementproject.feature.budget.entity.Budget;
@@ -71,7 +70,8 @@ public class BudgetService {
      */
     @Transactional
     public void budgetUpdate(Long budgetId, BudgetUpdateRequest request, User user) {
-        Budget budget = budgetRepository.findById(budgetId).orElseThrow(() -> new BaseException(NON_EXISTENT_BUDGET));
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_BUDGET));
         if (!budget.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
         }
@@ -84,7 +84,18 @@ public class BudgetService {
      */
     public void budgetSoftDelete(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
         user.softDeleted();
+        userRepository.save(user);
+    }
+
+    /**
+     * 예산 Hard 삭제
+     * @param userId
+     */
+    public void budgetHardDelete(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
+        userRepository.delete(user);
     }
 }
