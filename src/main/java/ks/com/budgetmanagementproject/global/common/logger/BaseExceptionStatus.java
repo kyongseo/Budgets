@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.global.common;
+package ks.com.budgetmanagementproject.global.common.logger;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
