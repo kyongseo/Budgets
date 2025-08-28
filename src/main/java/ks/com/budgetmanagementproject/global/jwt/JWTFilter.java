@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class JWTFilter extends OncePerRequestFilter {
 
@@ -62,7 +61,7 @@ public class JWTFilter extends OncePerRequestFilter {
         List<Role> roles = Arrays.stream(jwtUtil.getRole(accessToken).trim().split(","))
                 .map(roleRepository::findByName)
                 .map(opt -> opt.orElseThrow(() -> new RuntimeException("Role not found")))
-                .collect(Collectors.toList());
+                .toList();
 
         User user = User.builder()
                 .username(username)
