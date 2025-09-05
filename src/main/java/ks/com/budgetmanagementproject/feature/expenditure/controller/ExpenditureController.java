@@ -24,7 +24,7 @@ public class ExpenditureController {
 
     private final ExpenditureService expenditureService;
 
-    @Operation(summary = "✅ 지출 생성 API", responses = {
+    @Operation(operationId= "01-create-expenditure", summary = "✅ 지출 생성 API", responses = {
             @ApiResponse(responseCode = "201")
     })
     @Tag(name = "Expenditures")
@@ -35,7 +35,7 @@ public class ExpenditureController {
         return ResponseEntity.created(URI.create("/api/expenditures")).body(new BaseResponse<>(201, "지출 생성에 성공했습니다."));
     }
 
-    @Operation(summary = "✅ 지출 수정 API", responses = {
+    @Operation(operationId= "02-update-expenditure", summary = "✅ 지출 수정 API", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Expenditures")
@@ -46,7 +46,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 수정에 성공했습니다."));
     }
 
-    @Operation(summary = "✅ 지출 목록 조회 API", responses = {
+    @Operation(operationId= "03-list-expenditure", summary = "✅ 지출 목록 조회 API", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Expenditures")
@@ -59,7 +59,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 목록 조회에 성공했습니다.", listResponse));
     }
 
-    @Operation(summary = "✅ 지출 상세 조회 API", responses = {
+    @Operation(operationId= "04-list-detail-expenditure", summary = "✅ 지출 상세 조회 API", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Expenditures")
@@ -70,7 +70,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 상세 조회에 성공했습니다.", response));
     }
 
-    @Operation(summary = "✅ 지출 삭제 API", responses = {
+    @Operation(operationId= "05-soft-delete-expenditure", summary = "✅ 지출 삭제(hard) API", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Expenditures")
@@ -81,7 +81,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 삭제에성공했습니다."));
     }
 
-    @Operation(summary = "✅ 지출 합계 제외 업데이트 API", responses = {
+    @Operation(operationId= "06-except-update-expenditure", summary = "✅ 지출 합계 제외 업데이트 API", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Expenditures")
@@ -92,7 +92,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 합계 제외 업데이트에 성공했습니다."));
     }
 
-    @Operation(summary = "✅ 지출 추천 API", responses = {
+    @Operation(operationId= "07-recommend-expenditure", summary = "✅ 지출 추천 API", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Expenditures")
@@ -103,7 +103,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 추천에 성공했습니다.", response));
     }
 
-    @Operation(summary = "✅ 지출 안내 API", responses = {
+    @Operation(operationId= "07-guide-expenditure", summary = "✅ 지출 안내 API", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Expenditures")

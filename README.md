@@ -51,6 +51,8 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 
 ## API 구현과정 및 고려사항
 <details>
+![img_1.png](img_1.png)
+
 <summary>Budgets - click</summary>
 
 - Budget 카테고리 목록 조회
