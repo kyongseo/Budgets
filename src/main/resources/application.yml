@@ -25,17 +25,16 @@ spring:
   sql:
     init:
       mode: always
+      data-locations: classpath:data.sql
 logging:
   level:
     org:
       hibernate:
         SQL: DEBUG
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-#    groups-order: desc
-#    operations-sorter: alpha
-#    tags-sorter: alpha
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
