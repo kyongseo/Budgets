@@ -1,5 +1,6 @@
-package ks.com.budgetmanagementproject.feature.role;
+package ks.com.budgetmanagementproject.feature.role.repository;
 
+import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

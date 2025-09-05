@@ -1,7 +1,7 @@
 package ks.com.budgetmanagementproject.global.config;
 
-import ks.com.budgetmanagementproject.feature.role.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.global.jwt.JWTFilter;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import ks.com.budgetmanagementproject.global.jwt.LoginFilter;

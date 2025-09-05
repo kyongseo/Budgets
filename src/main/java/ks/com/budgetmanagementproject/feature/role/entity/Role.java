@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.role;
+package ks.com.budgetmanagementproject.feature.role.entity;
 
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
