@@ -28,6 +28,6 @@ public class BudgetCategoryController {
     public ResponseEntity<?> categoryList() {
         BudgetCategoryResponse response = categoryService.categoryList();
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 카테고리 목록 조회에 성공했습니다."));
+        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 카테고리 목록 조회에 성공했습니다.", response));
     }
 }
