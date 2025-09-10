@@ -107,7 +107,7 @@ class UserServiceTest {
 
         // then
         assertEquals(200, res.getStatusCodeValue());
-        assertTrue(res.getBody() instanceof LoginResDto);
+        assertInstanceOf(LoginResDto.class, res.getBody());
 
         LoginResDto body = (LoginResDto) res.getBody();
         assertEquals("AT", body.getAccessToken());
