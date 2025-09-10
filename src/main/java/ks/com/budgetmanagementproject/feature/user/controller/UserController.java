@@ -37,7 +37,7 @@ public class UserController {
     @Tag(name = "User")
     public ResponseEntity<?> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
         try {
-            userService.signup(signUpReqDto);
+            userService.signUp(signUpReqDto);
             return ResponseEntity.ok(Map.of("message", "회원가입 성공"));
         }catch (Exception e) {
             log.error("signUp Error: {}", e.getMessage());

@@ -43,7 +43,7 @@ public class UserService {
     }
 
     @Transactional
-    public User signup(@Valid SignUpReqDto signUpReqDto) {
+    public void signUp(@Valid SignUpReqDto signUpReqDto) {
 
         Role userRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("USER not found"));
@@ -59,7 +59,6 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
-        return user;
     }
 
     public ResponseEntity<?> login(LoginReqDto userLoginDto, HttpServletResponse response) {
