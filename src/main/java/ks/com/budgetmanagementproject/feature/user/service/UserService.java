@@ -84,8 +84,6 @@ public class UserService {
 
         refreshRepository.save(rt);
 
-        // refreshRepository.saveRefreshToken(refreshToken, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
-
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setPath("/");
