@@ -115,7 +115,6 @@ class UserServiceTest {
         assertEquals(100L, body.getUserId());
         assertEquals("test1234@test.com", body.getUsername());
 
-        // 쿠키 검증
         Cookie accessCookie = response.getCookie("accessToken");
         Cookie refreshCookie = response.getCookie("refreshToken");
         assertNotNull(accessCookie);
@@ -125,7 +124,6 @@ class UserServiceTest {
         assertTrue(accessCookie.isHttpOnly());
         assertTrue(refreshCookie.isHttpOnly());
 
-        // 상호작용 검증
         verify(userRepository).findByUsername("test1234@test.com");
         verify(passwordEncoder).matches("1234", "ENC_PW");
         verify(jwtUtil).createAccessToken(eq(100L), eq("test1234@test.com"), anyList(), anyLong());
