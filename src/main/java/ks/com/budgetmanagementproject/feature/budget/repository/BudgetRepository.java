@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget,Long> {
     Budget findByCategoryAndPeriodAndUser(BudgetCategory category, LocalDate period, User user);

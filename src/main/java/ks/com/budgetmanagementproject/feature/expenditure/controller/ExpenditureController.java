@@ -52,8 +52,8 @@ public class ExpenditureController {
     @Tag(name = "Expenditures")
     @GetMapping
     public ResponseEntity<?> expenditureList(@RequestParam LocalDate minPeriod, @RequestParam LocalDate maxPeriod,
-                                          @RequestParam String categoryName, @RequestParam long minMoney,
-                                          @RequestParam long maxMoney, @AuthenticationPrincipal User user) {
+                                             @RequestParam String categoryName, @RequestParam long minMoney,
+                                             @RequestParam long maxMoney, @AuthenticationPrincipal User user) {
         ExpenditureListResponse listResponse = expenditureService.expenditureList(minPeriod, maxPeriod, categoryName, minMoney, maxMoney, user);
 
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 목록 조회에 성공했습니다.", listResponse));

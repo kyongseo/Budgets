@@ -42,6 +42,10 @@ public class UserService {
         return userRepository.existsByUsername(username);
     }
 
+    /**
+     * 회원 가입
+     * @param signUpReqDto : 이메일, 비밀번호
+     */
     @Transactional
     public void signUp(@Valid SignUpReqDto signUpReqDto) {
 
@@ -61,6 +65,12 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * 로그인
+     * @param userLoginDto 이메일, 비밀번호
+     * @param response Token 저장 위치
+     * @return response
+     */
     public ResponseEntity<?> login(LoginReqDto userLoginDto, HttpServletResponse response) {
 
         Optional<User> user = userRepository.findByUsername(userLoginDto.getUsername());

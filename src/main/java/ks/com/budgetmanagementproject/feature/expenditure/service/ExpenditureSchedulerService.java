@@ -24,7 +24,6 @@ public class ExpenditureSchedulerService {
     private final JavaMailSender mailSender;
 
     @Transactional
-//    @Scheduled(initialDelay = 1000 ,fixedDelay = 60 * 60 * 1000)
     @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Seoul")
     public void expenditureRecommendScheduler() {
         List<User> users = userRepository.findAll();
@@ -47,7 +46,6 @@ public class ExpenditureSchedulerService {
     }
 
     @Transactional
-//    @Scheduled(initialDelay = 1000 ,fixedDelay = 60 * 60 * 1000)
     @Scheduled(cron = "0 0 20 * * ?", zone = "Asia/Seoul")
     public void expenditureGuideScheduler() {
         List<User> users = userRepository.findAll();

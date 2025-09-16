@@ -35,8 +35,8 @@ public class ExpenditureService {
      * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외처리하고,
      * request에서 받은 값들을 저장하고,
      * 지정된 카테고리 예산에서 마이너스 해준다.
-     * @param request : money, memo, category, period
-     * @param user
+     * @param request money, memo, category, period
+     * @param user 사용자
      */
     @Transactional
     public void expenditureCreate(ExpenditureCreateRequest request, User user) {
@@ -67,15 +67,15 @@ public class ExpenditureService {
      * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외 발생
      * 존재하지 않는 expenditureId가 들어오면 예외 발생,
      * 수정할 지출의 유저와 다를경우 예외 발생
-     * @param expenditureId
-     * @param request : money, memo, category, period
-     * @param user
+     * @param expenditureId 지출 아이디
+     * @param request money, memo, category, period
+     * @param user 사용지
      */
     @Transactional
     public void expenditureUpdate(Long expenditureId, ExpenditureUpdateRequest request, User user) {
         Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
         BudgetCategory category = categoryRepository.findByName(request.getCategoryName()).orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
-        if (expenditure.getUser().getId() != user.getId()) {
+        if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
         }
         expenditure.updateExpenditure(request, category);
@@ -86,13 +86,13 @@ public class ExpenditureService {
      * 기간, 카테고리, 최소, 최대 금액으로 지출 목록을 조회한다.
      * 조회된 모든 내용의 지출 합계, 카테고리별 지출 합계를 같이 반환합니다.
      * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외 발생
-     * @param minPeriod
-     * @param maxPeriod
-     * @param categoryName
-     * @param minMoney
-     * @param maxMoney
-     * @param user
-     * @return
+     * @param minPeriod 최소 기간
+     * @param maxPeriod 최대 기간
+     * @param categoryName 카테고리 이름
+     * @param minMoney 최소 금액
+     * @param maxMoney 최대 금액
+     * @param user 시용자
+     * @return response
      */
     @Transactional(readOnly = true)
     public ExpenditureListResponse expenditureList(LocalDate minPeriod, LocalDate maxPeriod,
@@ -110,15 +110,15 @@ public class ExpenditureService {
      * expenditureId로 지출 상세 조회한다.
      * 존재하지 않는 expenditureId가 들어오면 예외 발생,
      * 조회할 지출의 유저와 다를경우 예외 발생
-     * @param expenditureId
-     * @param user
-     * @return
+     * @param expenditureId 지출 아이디
+     * @param user 사용자
+     * @return response
      */
     @Transactional(readOnly = true)
     public ExpenditureDetailResponse expenditureDetail(Long expenditureId, User user) {
         Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
-        if (expenditure.getUser().getId() != user.getId()) {
+        if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
         }
 
@@ -130,14 +130,14 @@ public class ExpenditureService {
      * expenditureId로 지출을 삭제한다.
      * 존재하지 않는 expenditureId가 들어오면 예외 발생,
      * 삭제할 지출의 유저와 다를경우 예외 발생
-     * @param expenditureId
-     * @param user
+     * @param expenditureId 지출 아이디
+     * @param user 사용자
      */
     @Transactional
     public void expenditureDelete(Long expenditureId, User user) {
         Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
-        if (expenditure.getUser().getId() != user.getId()) {
+        if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
         }
 
@@ -149,15 +149,15 @@ public class ExpenditureService {
      * expenditureId, excludingTotal로 지출 합계 제외를 업데이트한다.
      * 존재하지 않는 expenditureId가 들어오면 예외 발생,
      * 업데이트할 지출의 유저와 다를경우 예외 발생
-     * @param expenditureId
-     * @param user
+     * @param expenditureId 지출 아이디
+     * @param user 사용자
      * @param excludingTotal : false = 합계 제외 안함, true = 합계 제외 함.
      */
     @Transactional
     public void expenditureExceptUpdate(Long expenditureId, User user, boolean excludingTotal) {
         Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
-        if (expenditure.getUser().getId() != user.getId()) {
+        if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
         }
 
@@ -168,8 +168,8 @@ public class ExpenditureService {
      * 지출 추천
      * 오늘 날짜, 이번 달 마지막 날짜로 이번 달 남은 날의 기간을 구해 오늘 지출 금액을 추천한다.
      * 예산이 초과된 카테고리의 최소 금액은 20,000원으로 설정.
-     * @param user
-     * @return
+     * @param user 사용자
+     * @return response
      */
     @Transactional(readOnly = true)
     public ExpenditureRecommendResponse expenditureRecommend(User user) {
@@ -195,7 +195,7 @@ public class ExpenditureService {
             todayExpenditurePossibleTotal += recommend.getTodayExpenditurePossibleMoney();
         }
 
-        /**
+        /*
          * 이번 달에 예산을 초과한 카테고리가 하나도 없다면 첫 번째 message 출력하고
          * 이번 달에 예산을 초과한 카테고리가 하나라도 있으면 위 예산을 초과한 카테고리 이름 + 두 번째 message를 출력한다.
          */
@@ -215,7 +215,7 @@ public class ExpenditureService {
      * 오늘 날짜, 이번 달 마지막 날짜로 이번 달 남은 날의 기간을 구해 오늘 사용했으면 적절한 금액을 구한다.
      * 예산이 초과된 카테고리의 최소 금액은 20,000원으로 설정.
      * @param user
-     * @return
+     * @return response
      */
     @Transactional(readOnly = true)
     public ExpenditureGuideResponse expenditureGuide(User user) {

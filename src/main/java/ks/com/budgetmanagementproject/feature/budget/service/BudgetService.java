@@ -29,7 +29,7 @@ public class BudgetService {
      * 예산 설정
      * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외 처리
      * @param request money, categoryName, period
-     * @param user
+     * @param user 사용자
      */
     @Transactional
     public void budgetSetting(BudgetSettingRequest request, User user) {
@@ -47,9 +47,9 @@ public class BudgetService {
 
     /**
      * 이미 설정한 예산이라면 예외처리.
-     * @param request
-     * @param user
-     * @param category
+     * @param request period
+     * @param user 사용자
+     * @param category 카테고리
      */
     private void existsByBudget(BudgetSettingRequest request, User user, BudgetCategory category) {
         LocalDate date = LocalDate.of(request.getPeriod().getYear(), request.getPeriod().getMonth(), 1);
@@ -64,9 +64,9 @@ public class BudgetService {
      * 예산 수정
      * budgetId, money, user를 받아서 예산을 수정한다.
      * 만약 없는 budgetId가 들어오면 예외 발생, 수정할 예산의 유저와 다를경우 예외 발생
-     * @param budgetId
+     * @param budgetId 예산 아이디
      * @param request : money
-     * @param user
+     * @param user 사용자
      */
     @Transactional
     public void budgetUpdate(Long budgetId, BudgetUpdateRequest request, User user) {
@@ -80,7 +80,7 @@ public class BudgetService {
 
     /**
      * 예산 Soft 삭제
-     * @param userId
+     * @param userId 사용자 아이디
      */
     public void budgetSoftDelete(Long userId) {
         User user = userRepository.findById(userId)
@@ -91,7 +91,7 @@ public class BudgetService {
 
     /**
      * 예산 Hard 삭제
-     * @param userId
+     * @param userId 사용자 아이디
      */
     public void budgetHardDelete(Long userId) {
         User user = userRepository.findById(userId)
