@@ -1,5 +1,7 @@
 package ks.com.budgetmanagementproject.feature.budget.service;
 
+import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendListResponse;
+import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendResponse;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
 import ks.com.budgetmanagementproject.feature.budget.entity.Budget;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus.*;
 
@@ -97,5 +100,18 @@ public class BudgetService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
         userRepository.delete(user);
+    }
+
+    /**
+     * 예산 추천
+     * totalAmount를 기존 이용중인 유저들이 설정한 평균값으로 카테고리별로 적정 금액을 나눠서 반환한다.
+     * @param totalAmount
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public BudgetRecommendListResponse budgetRecommend(long totalAmount) {
+        List<BudgetRecommendResponse> responseList = budgetRepository.findByAverage(totalAmount);
+
+        return new BudgetRecommendListResponse(responseList);
     }
 }

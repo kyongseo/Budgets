@@ -3,6 +3,7 @@ package ks.com.budgetmanagementproject.feature.budget.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendListResponse;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetService;
@@ -66,4 +67,15 @@ public class BudgetController {
 
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
     }
+    @Operation(summary = "Budget 추천 API", responses = {
+            @ApiResponse(responseCode = "200")
+    })
+    @Tag(name = "Budgets")
+    @GetMapping("/recommend")
+    public ResponseEntity<?> budgetRecommend(@RequestParam long totalAmount) {
+        BudgetRecommendListResponse budgetRecommendListResponse = budgetService.budgetRecommend(totalAmount);
+
+        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 추천에 성공했습니다.", budgetRecommendListResponse));
+    }
+
 }
