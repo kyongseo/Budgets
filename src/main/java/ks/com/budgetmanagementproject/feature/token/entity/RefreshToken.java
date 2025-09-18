@@ -1,4 +1,4 @@
-package ks.com.budgetmanagementproject.feature.token;
+package ks.com.budgetmanagementproject.feature.token.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

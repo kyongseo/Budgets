@@ -34,9 +34,10 @@ public class UserController {
 
     @Operation(operationId = "01-signup", summary = "✅ 회원가입", description = "회원가입")
     @PostMapping("/signup")
+    @Tag(name = "User")
     public ResponseEntity<?> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
         try {
-            userService.signup(signUpReqDto);
+            userService.signUp(signUpReqDto);
             return ResponseEntity.ok(Map.of("message", "회원가입 성공"));
         }catch (Exception e) {
             log.error("signUp Error: {}", e.getMessage());
@@ -47,6 +48,7 @@ public class UserController {
 
     @Operation(operationId = "02-login", summary = "✅ 로그인", description = "로그인")
     @PostMapping("/login")
+    @Tag(name = "User")
     public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, BindingResult bindingResult, HttpServletResponse response) {
 
         if (bindingResult.hasErrors()) {
@@ -57,6 +59,7 @@ public class UserController {
 
     @Operation(operationId = "03-currentUser", summary = "✅ 로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
     @GetMapping("/")
+    @Tag(name = "User")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (!AuthUtil.isAuthenticated(authentication)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

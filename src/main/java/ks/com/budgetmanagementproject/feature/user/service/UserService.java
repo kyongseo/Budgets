@@ -3,10 +3,10 @@ package ks.com.budgetmanagementproject.feature.user.service;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import ks.com.budgetmanagementproject.feature.role.Role;
-import ks.com.budgetmanagementproject.feature.role.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.RefreshRepository;
-import ks.com.budgetmanagementproject.feature.token.RefreshToken;
+import ks.com.budgetmanagementproject.feature.role.entity.Role;
+import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
@@ -42,8 +42,12 @@ public class UserService {
         return userRepository.existsByUsername(username);
     }
 
+    /**
+     * 회원 가입
+     * @param signUpReqDto : 이메일, 비밀번호
+     */
     @Transactional
-    public User signup(@Valid SignUpReqDto signUpReqDto) {
+    public void signUp(@Valid SignUpReqDto signUpReqDto) {
 
         Role userRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("USER not found"));
@@ -59,9 +63,14 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
-        return user;
     }
 
+    /**
+     * 로그인
+     * @param userLoginDto 이메일, 비밀번호
+     * @param response Token 저장 위치
+     * @return response
+     */
     public ResponseEntity<?> login(LoginReqDto userLoginDto, HttpServletResponse response) {
 
         Optional<User> user = userRepository.findByUsername(userLoginDto.getUsername());
@@ -84,8 +93,6 @@ public class UserService {
                         .build();
 
         refreshRepository.save(rt);
-
-        // refreshRepository.saveRefreshToken(refreshToken, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
 
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);

@@ -22,11 +22,10 @@ spring:
     user:
       name: disabled
       password: disable
-
   sql:
     init:
       mode: always
-
+      data-locations: classpath:data.sql
 logging:
   level:
     org:
@@ -36,13 +35,8 @@ logging:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-    groups-order: asc
-    operations-sorter: alpha   # operationId 알파벳/숫자 순 정렬
-    tags-sorter: alpha
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-
-
 
 server:
   port: 9091

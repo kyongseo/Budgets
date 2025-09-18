@@ -1,8 +1,7 @@
 package ks.com.budgetmanagementproject.global.config;
 
-import jakarta.servlet.http.HttpServletRequest;
-import ks.com.budgetmanagementproject.feature.role.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.global.jwt.JWTFilter;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import ks.com.budgetmanagementproject.global.jwt.LoginFilter;
@@ -12,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -62,30 +62,26 @@ public class SecurityConfig {
                         .requestMatchers(swaggerAllowPage).permitAll()
                         .anyRequest().authenticated())
                 )
-                .csrf(csrf -> csrf.disable())
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new JWTFilter(jwtUtil, roleRepository), LoginFilter.class)
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .cors(corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
+                .cors(corsCustomizer -> corsCustomizer.configurationSource((CorsConfigurationSource) request -> {
 
-                    @Override
-                    public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                    CorsConfiguration configuration = new CorsConfiguration();
 
-                        CorsConfiguration configuration = new CorsConfiguration();
+                    configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                    configuration.setAllowedMethods(Collections.singletonList("*"));
+                    configuration.setAllowCredentials(true);
+                    configuration.setAllowedHeaders(Collections.singletonList("*"));
+                    configuration.setMaxAge(3600L);
 
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                        configuration.setAllowedMethods(Collections.singletonList("*"));
-                        configuration.setAllowCredentials(true);
-                        configuration.setAllowedHeaders(Collections.singletonList("*"));
-                        configuration.setMaxAge(3600L);
+                    configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
+                    configuration.setExposedHeaders(Collections.singletonList("access"));
 
-                        configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
-                        configuration.setExposedHeaders(Collections.singletonList("access"));
-
-                        return configuration;
-                    }
+                    return configuration;
                 }));
         return http.build();
     }

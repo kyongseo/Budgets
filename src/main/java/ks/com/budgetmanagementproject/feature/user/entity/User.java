@@ -1,7 +1,7 @@
 package ks.com.budgetmanagementproject.feature.user.entity;
 
 import jakarta.persistence.*;
-import ks.com.budgetmanagementproject.feature.role.Role;
+import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.global.common.model.BaseTimeEntity;
 import lombok.*;
 
@@ -28,7 +28,7 @@ public class User extends BaseTimeEntity {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "user_role",
+            name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )

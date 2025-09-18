@@ -6,8 +6,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import ks.com.budgetmanagementproject.feature.role.Role;
-import ks.com.budgetmanagementproject.feature.role.RoleRepository;
+import ks.com.budgetmanagementproject.feature.role.entity.Role;
+import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class JWTFilter extends OncePerRequestFilter {
 
@@ -62,7 +61,7 @@ public class JWTFilter extends OncePerRequestFilter {
         List<Role> roles = Arrays.stream(jwtUtil.getRole(accessToken).trim().split(","))
                 .map(roleRepository::findByName)
                 .map(opt -> opt.orElseThrow(() -> new RuntimeException("Role not found")))
-                .collect(Collectors.toList());
+                .toList();
 
         User user = User.builder()
                 .username(username)
@@ -82,7 +81,6 @@ public class JWTFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
-
 
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {

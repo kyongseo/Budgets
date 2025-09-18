@@ -19,7 +19,7 @@ import java.util.List;
 @Getter
 public class JWTUtil {
 
-    private SecretKey secretKey;
+    private final SecretKey secretKey;
 
     public static Long ACCESS_TOKEN_EXPIRE_COUNT = 30 * 60 * 1000L; // 30분
     public static Long REFRESH_TOKEN_EXPIRE_COUNT = 7 * 24 * 60 * 60 * 1000L; // 7일
@@ -52,8 +52,8 @@ public class JWTUtil {
         return extractClaims(token).get("category", String.class);
     }
 
-    public Boolean isExpired(String token) {
-        return extractClaims(token).getExpiration().before(new Date());
+    public void isExpired(String token) {
+        extractClaims(token).getExpiration();
     }
 
     public String createAccessToken(Long userId, String username, List<String> roles, Long expiredMs) {

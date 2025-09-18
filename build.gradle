@@ -37,10 +37,14 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
+
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.batch:spring-batch-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
+    testImplementation "org.mockito:mockito-core:3.12.4"
 
     // jwt
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
@@ -50,8 +54,7 @@ dependencies {
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
 
     // Swagger UI
-    implementation platform("org.springdoc:springdoc-openapi-bom:2.8.9")
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui"
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.8.11'
 }
 
 tasks.named('test') {

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/budget/categories")
-@Tag(name = "budget-category", description = "Budget-Category API")
+@Tag(name = "Budget-category", description = "Budget-Category API")
 public class BudgetCategoryController {
 
     private final BudgetCategoryService categoryService;
@@ -23,11 +23,11 @@ public class BudgetCategoryController {
     @Operation(operationId = "01-list-budget", summary = "✅ 예산 카테고리 목록 조회", responses = {
             @ApiResponse(responseCode = "200")
     })
-    @Tag(name = "budget-category")
+    @Tag(name = "Budget-category")
     @GetMapping
     public ResponseEntity<?> categoryList() {
         BudgetCategoryResponse response = categoryService.categoryList();
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 카테고리 목록 조회에 성공했습니다."));
+        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 카테고리 목록 조회에 성공했습니다.", response));
     }
 }
