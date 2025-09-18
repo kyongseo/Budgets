@@ -27,7 +27,6 @@ public class BudgetController {
     @Operation(operationId = "01-create-budget", summary = "✅ 예산 설정", responses = {
             @ApiResponse(responseCode = "201")
     })
-    @Tag(name = "Budgets")
     @PostMapping
     public ResponseEntity<?> budgetSetting_endpoint(@Validated @RequestBody BudgetSettingRequest request, @AuthenticationPrincipal User user) {
         budgetService.budgetSetting(request, user);
@@ -38,7 +37,6 @@ public class BudgetController {
     @Operation(operationId = "02-update-budget", summary = "✅ 예산 수정", responses = {
             @ApiResponse(responseCode = "200")
     })
-    @Tag(name = "Budgets")
     @PatchMapping("/{budgetId}")
     public ResponseEntity<?> budgetUpdate_endpoint(@PathVariable Long budgetId, @Validated @RequestBody BudgetUpdateRequest request, @AuthenticationPrincipal User user) {
         budgetService.budgetUpdate(budgetId, request, user);
@@ -49,7 +47,6 @@ public class BudgetController {
     @Operation(operationId = "03-soft-delete-budget", summary = "✅ 예산 삭제(soft)", responses = {
             @ApiResponse(responseCode = "200")
     })
-    @Tag(name = "Budgets")
     @DeleteMapping("/soft-delete/{budgetId}")
     public ResponseEntity<?> budgetSoftDelete_endpoint(@PathVariable Long budgetId) {
         budgetService.budgetSoftDelete(budgetId);
@@ -60,17 +57,16 @@ public class BudgetController {
     @Operation(operationId = "04-hard-delete-budget", summary = "✅ 예산 삭제(hard)", responses = {
             @ApiResponse(responseCode = "200")
     })
-    @Tag(name = "Budgets")
     @DeleteMapping("/hard-delete/{budgetId}")
     public ResponseEntity<?> budgetHardDelete_endpoint(@PathVariable Long budgetId) {
         budgetService.budgetHardDelete(budgetId);
 
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
     }
-    @Operation(summary = "Budget 추천 API", responses = {
+
+    @Operation(operationId = "05-recommend-budget", summary = "✅ 예산 추천", responses = {
             @ApiResponse(responseCode = "200")
     })
-    @Tag(name = "Budgets")
     @GetMapping("/recommend")
     public ResponseEntity<?> budgetRecommend(@RequestParam long totalAmount) {
         BudgetRecommendListResponse budgetRecommendListResponse = budgetService.budgetRecommend(totalAmount);
