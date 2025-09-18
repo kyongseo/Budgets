@@ -5,13 +5,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
-import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
 import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.UserEditDto;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -115,5 +117,17 @@ public class UserService {
                 .build();
 
         return ResponseEntity.ok(loginResponseDto);
+    }
+
+    @Transactional
+    public User updateUser(String username, UserEditDto userEditDto) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+        user.setUsernick(userEditDto.getUsernick());
+        user.setPhoneNumber(userEditDto.getPhoneNumber());
+
+        userRepository.save(user);
+        return user;
     }
 }
