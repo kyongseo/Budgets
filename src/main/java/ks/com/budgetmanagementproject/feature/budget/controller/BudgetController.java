@@ -24,7 +24,7 @@ public class BudgetController {
     private final BudgetService budgetService;
 
 
-    @Operation(operationId = "01-create-budget", summary = "✅ 예산 설정", responses = {
+    @Operation(summary = "✅ 예산 설정", responses = {
             @ApiResponse(responseCode = "201")
     })
     @PostMapping
@@ -34,7 +34,7 @@ public class BudgetController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 설정에 성공했습니다."));
     }
 
-    @Operation(operationId = "02-update-budget", summary = "✅ 예산 수정", responses = {
+    @Operation(summary = "✅ 예산 수정", responses = {
             @ApiResponse(responseCode = "200")
     })
     @PatchMapping("/{budgetId}")
@@ -44,7 +44,7 @@ public class BudgetController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 수정에 성공했습니다."));
     }
 
-    @Operation(operationId = "03-soft-delete-budget", summary = "✅ 예산 삭제(soft)", responses = {
+    @Operation(summary = "✅ 예산 삭제(soft)", responses = {
             @ApiResponse(responseCode = "200")
     })
     @DeleteMapping("/soft-delete/{budgetId}")
@@ -54,7 +54,7 @@ public class BudgetController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
     }
 
-    @Operation(operationId = "04-hard-delete-budget", summary = "✅ 예산 삭제(hard)", responses = {
+    @Operation(summary = "✅ 예산 삭제(hard)", responses = {
             @ApiResponse(responseCode = "200")
     })
     @DeleteMapping("/hard-delete/{budgetId}")
@@ -64,7 +64,7 @@ public class BudgetController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
     }
 
-    @Operation(operationId = "05-recommend-budget", summary = "✅ 예산 추천", responses = {
+    @Operation(summary = "✅ 예산 추천", responses = {
             @ApiResponse(responseCode = "200")
     })
     @GetMapping("/recommend")

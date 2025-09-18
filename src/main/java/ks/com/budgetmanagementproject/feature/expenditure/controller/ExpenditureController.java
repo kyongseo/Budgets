@@ -24,7 +24,7 @@ public class ExpenditureController {
 
     private final ExpenditureService expenditureService;
 
-    @Operation(operationId= "01-create-expenditure", summary = "✅ 지출 생성", responses = {
+    @Operation(summary = "✅ 지출 생성", responses = {
             @ApiResponse(responseCode = "201")
     })
     @PostMapping
@@ -34,7 +34,7 @@ public class ExpenditureController {
         return ResponseEntity.created(URI.create("/api/expenditures")).body(new BaseResponse<>(201, "지출 생성에 성공했습니다."));
     }
 
-    @Operation(operationId= "02-update-expenditure", summary = "✅ 지출 수정", responses = {
+    @Operation(summary = "✅ 지출 수정", responses = {
             @ApiResponse(responseCode = "200")
     })
     @PatchMapping("/{expenditureId}")
@@ -44,7 +44,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 수정에 성공했습니다."));
     }
 
-    @Operation(operationId= "03-list-expenditure", summary = "✅ 지출 목록 조회", responses = {
+    @Operation(summary = "✅ 지출 목록 조회", responses = {
             @ApiResponse(responseCode = "200")
     })
     @GetMapping
@@ -56,7 +56,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 목록 조회에 성공했습니다.", listResponse));
     }
 
-    @Operation(operationId= "04-list-detail-expenditure", summary = "✅ 지출 상세 조회", responses = {
+    @Operation(summary = "✅ 지출 상세 조회", responses = {
             @ApiResponse(responseCode = "200")
     })
     @GetMapping("/{expenditureId}")
@@ -66,7 +66,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 상세 조회에 성공했습니다.", response));
     }
 
-    @Operation(operationId= "05-soft-delete-expenditure", summary = "✅ 지출 삭제(hard)", responses = {
+    @Operation(summary = "✅ 지출 삭제(hard)", responses = {
             @ApiResponse(responseCode = "200")
     })
     @DeleteMapping("/{expenditureId}")
@@ -76,10 +76,9 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 삭제에성공했습니다."));
     }
 
-    @Operation(operationId= "06-except-update-expenditure",
-            summary = "✅ 지출 합계 제외 업데이트 API",
-            responses = {@ApiResponse(responseCode = "200")}
-    )
+    @Operation(summary = "✅ 지출 합계 제외 업데이트 API", responses = {
+            @ApiResponse(responseCode = "200")
+    })
     @PatchMapping("/except/{expenditureId}")
     public ResponseEntity<?> expenditureExceptUpdate(@PathVariable Long expenditureId, @AuthenticationPrincipal User user, @RequestParam boolean excludingTotal) {
         expenditureService.expenditureExceptUpdate(expenditureId, user, excludingTotal);
@@ -87,7 +86,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 합계 제외 업데이트에 성공했습니다."));
     }
 
-    @Operation(operationId= "07-recommend-expenditure", summary = "✅ 지출 추천", responses = {
+    @Operation(summary = "✅ 지출 추천", responses = {
             @ApiResponse(responseCode = "200")
     })
     @GetMapping("/recommend")
@@ -97,7 +96,7 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 추천에 성공했습니다.", response));
     }
 
-    @Operation(operationId= "07-guide-expenditure", summary = "✅ 지출 안내", responses = {
+    @Operation(summary = "✅ 지출 안내", responses = {
             @ApiResponse(responseCode = "200")
     })
     @GetMapping("/guide")
