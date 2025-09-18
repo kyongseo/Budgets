@@ -35,7 +35,7 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 <br/>
 
 ## ERD
-![img.png](img.png)
+![img_2.png](img_2.png)]
 
 <br/>
 
@@ -46,68 +46,109 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 
 ## API Reference
 
+<details>
+
+<summary>Budgets - click</summary>
+
+- Budget 카테고리 목록 조회 
+    - [GET] /api/budget-categories
+
+- Budget 설정 
+    - [POST] /api/budgets
+
+- Budget 수정 
+    - [PATCH] /api/budgets/{budgetId}
+
+- Budget 설계 추천 
+    - [GET] /api/budgets/recommend
+
+</details> 
+
+<details>
+
+<summary>Expenditures - click</summary>
+
+
+- Expenditure 생성 
+    - [POST] /api/expenditures
+
+- Expenditure 수정 
+    - [PATCH] /api/expenditures/{expenditureId}
+
+- Expenditure 목록 조회 
+    - [GET] /api/expenditures
+
+- Expenditure 상세 조회 
+    - [GET] /api/expenditures/{expenditureId}
+
+- Expenditure 삭제 
+    - [DELETE] /api/expenditures/{expenditureId}
+
+- Expenditure 합계 제외 
+    - [PATCH] /api/expenditures/except/{expenditureId}
+
+- Expenditure 추천 
+    - [GET] /api/expenditure/recommend
+
+- Expenditure 안내 
+    - [GET] /api/expenditure/guide
+
+</details>
+
+<details>
+
+<summary>Users - click</summary>
+
+- User 회원가입 
+    - [POST] /api/users
+
+- User 로그인 
+    - [POST] /api/users/login
+
+</details>
 
 <br/>
 
 ## API 구현과정 및 고려사항
-<details>
-![img_1.png](img_1.png)
 
+<details> 
 <summary>Budgets - click</summary>
 
-- Budget 카테고리 목록 조회
-    - [GET] /api/budget-categories
-    
-- Budget 설정
-    - [POST] /api/budgets
-    
-- Budget 수정
-    - [PATCH] /api/budgets/{budgetId}
-    
-- Budget 설계 추천
-    - [GET] /api/budgets/recommend
-    
-</details>
+- 중복 예산 방지: (user_id, category_id, period_month) 유니크 
+- 월 경계 처리: period_month는 매월 1일 고정 
+- 추천: 사용자 히스토리 기반 평균/중위값·카테고리 비중·잔액 대비 가이드 
+- 동시성: 동일 월/카테고리 갱신 시 비관/낙관락 중 하나 택일
 
-<details>
+</details> 
+
+<details> 
 <summary>Expenditures - click</summary>
 
-- Expenditure 생성
-    - [POST] /api/expenditures
+- is_excluded=true 시 합계·분석에서 제외 
+- 조회 필터: 기간(월/일), 카테고리, 금액 범위, 키워드 
+- 인덱스: (user_id, spent_at), (user_id, category_id, spent_at)
+- 삭제 정책: 기본 soft delete 불사용(요구 시 추가)
 
-- Expenditure 수정
-    - [PATCH] /api/expenditures/{expenditureId}
+</details> 
 
-- Expenditure 목록 조회
-    - [GET] /api/expenditures
-
-- Expenditure 상세 조회
-    - [GET] /api/expenditures/{expenditureId}
-
-- Expenditure 삭제
-    - [DELETE] /api/expenditures/{expenditureId}
-    
-- Expenditure 합계 제외
-    - [PATCH] /api/expenditures/except/{expenditureId}
-    
-- Expenditure 추천
-    - [GET] /api/expenditure/recommend
-    
-- Expenditure 안내
-    - [GET] /api/expenditure/guide
-    
-</details>
-
-<details>
+<details> 
 <summary>Users - click</summary>
 
-- User 회원가입
-    - [POST] /api/users
-    
-- User 로그인
-    - [POST] /api/users/login
-    
+- 비밀번호 해시(BCrypt), 로그인 시 JWT 발급 
+- 이메일 중복 방지, 입력 검증(형식/길이/복잡도)
+
 </details>
+
 <br/>
 
 ## Test
+- 단위 테스트: Service/Repository 레벨 (@DataJpaTest, Mockito)
+- 통합 테스트: WebMvcTest/RestAssured로 API 계약 검증
+
+
+#### 주요 시나리오
+- 예산 생성/수정/중복 방지 
+- 지출 생성/수정/목록/합계 제외 
+- 추천/가이드 응답의 기본 통계 검증 
+- 회원가입/로그인/JWT 인증 흐름 
+- 품질 목표: 라인 커버리지 70%+, 핵심 도메인(서비스) 90%+
