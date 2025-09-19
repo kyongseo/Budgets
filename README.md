@@ -1,21 +1,19 @@
-
 # 예산 관리 어플리케이션
-
-<br/>
 
 ## 프로젝트 기간
 2025.08. ~ 2025
 
 <br/>
 
-## Table of Contents
+## 목차
 - [개요](#개요)
 - [Skils](#skils)
 - [ERD](#erd)
 - [프로젝트 설계 및 일정관리](#프로젝트-설계-및-일정관리)
-- [API Reference](#api-reference)
-- [API 구현과정 및 고려사항](#api-구현과정-및-고려사항)
+  - [API Reference](#api-reference)
+  - [API 구현과정 및 고려사항](#api-구현과정-및-고려사항)
 - [Test](#test)
+  - [주요 시나리오](#주요-시나리오)
 
 <br/>
 
@@ -147,7 +145,7 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 - 통합 테스트: WebMvcTest/RestAssured로 API 계약 검증
 
 
-#### 주요 시나리오
+### 주요 시나리오
 
 - 예산 생성/수정/중복 방지
 - 지출 생성/수정/목록/합계 제외
