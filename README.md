@@ -33,7 +33,7 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 <br/>
 
 ## ERD
-![img_2.png](img_2.png)
+![img_2.png](img/erd_img1.png)
 
 <br/>
 
@@ -152,3 +152,28 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 - 추천/가이드 응답의 기본 통계 검증
 - 회원가입/로그인/JWT 인증 흐름
 - 품질 목표: 라인 커버리지 70%+, 핵심 도메인(서비스) 90%+
+
+
+## env file 
+```makefile
+# 공통 Postgresql 설정
+POSTGRES_HOST=postgresql-db
+POSTGRES_PORT={POSTGRES_PORT}
+POSTGRES_DB=${POSTGRES_DB}
+POSTGRES_USER=${POSTGRES_USER}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRESQL_URL=jdbc:postgresql://localhost:{POSTGRES_PORT}/{POSTGRES_DB}
+
+# 공통 redis 설정
+REDIS_HOST=${REDIS_HOST}
+REDIS_PORT={REDIS_PORT}
+REDIS_USER=${REDIS_USER}
+REDIS_PASSWORD=${REDIS_PASSWORD}
+
+# mail 정보
+MAIL_USERNAME=${MAIL_USERNAME}
+MAIL_PASSWORD=${MAIL_PASSWORD}
+
+# JWT 설정
+JWT_SECRET=${JWT_SECRET}
+```
