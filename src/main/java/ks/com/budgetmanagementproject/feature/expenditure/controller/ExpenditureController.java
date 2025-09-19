@@ -66,14 +66,24 @@ public class ExpenditureController {
         return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 상세 조회에 성공했습니다.", response));
     }
 
+    @Operation(summary = "✅ 지출 삭제(soft)", responses = {
+            @ApiResponse(responseCode = "200")
+    })
+    @DeleteMapping("/{expenditureId}")
+    public ResponseEntity<?> expenditureSoftDelete(@PathVariable Long expenditureId, @AuthenticationPrincipal User user) {
+        expenditureService.expenditureSoftDelete(expenditureId, user);
+
+        return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 삭제에 성공했습니다."));
+    }
+
     @Operation(summary = "✅ 지출 삭제(hard)", responses = {
             @ApiResponse(responseCode = "200")
     })
     @DeleteMapping("/{expenditureId}")
-    public ResponseEntity<?> expenditureDelete(@PathVariable Long expenditureId, @AuthenticationPrincipal User user) {
-        expenditureService.expenditureDelete(expenditureId, user);
+    public ResponseEntity<?> expenditureHardDelete(@PathVariable Long expenditureId, @AuthenticationPrincipal User user) {
+        expenditureService.expenditureHardDelete(expenditureId, user);
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 삭제에성공했습니다."));
+        return ResponseEntity.ok().body(new BaseResponse<>(200, "지출 삭제에 성공했습니다."));
     }
 
     @Operation(summary = "✅ 지출 합계 제외 업데이트 API", responses = {
