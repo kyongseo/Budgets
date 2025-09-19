@@ -69,7 +69,7 @@ public class ExpenditureController {
     @Operation(summary = "✅ 지출 삭제(soft)", responses = {
             @ApiResponse(responseCode = "200")
     })
-    @DeleteMapping("/{expenditureId}")
+    @DeleteMapping("/soft-delete/{expenditureId}")
     public ResponseEntity<?> expenditureSoftDelete(@PathVariable Long expenditureId, @AuthenticationPrincipal User user) {
         expenditureService.expenditureSoftDelete(expenditureId, user);
 
@@ -79,7 +79,7 @@ public class ExpenditureController {
     @Operation(summary = "✅ 지출 삭제(hard)", responses = {
             @ApiResponse(responseCode = "200")
     })
-    @DeleteMapping("/{expenditureId}")
+    @DeleteMapping("/hard-delete/{expenditureId}")
     public ResponseEntity<?> expenditureHardDelete(@PathVariable Long expenditureId, @AuthenticationPrincipal User user) {
         expenditureService.expenditureHardDelete(expenditureId, user);
 
