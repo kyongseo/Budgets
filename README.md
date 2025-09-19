@@ -39,6 +39,8 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 
 ## 프로젝트 설계 및 일정관리
 
+link : [일정관리](https://great-product-fd5.notion.site/b7b4131ed6874ff6825c62499d183230?source=copy_link)
+
 ### API Reference
 
 <details>
