@@ -20,7 +20,7 @@ public class BudgetCategoryController {
 
     private final BudgetCategoryService categoryService;
 
-    @Operation(operationId = "01-list-budget", summary = "✅ 예산 카테고리 목록 조회", responses = {
+    @Operation(summary = "✅ 예산 카테고리 목록 조회", responses = {
             @ApiResponse(responseCode = "200")
     })
     @Tag(name = "Budget-category")

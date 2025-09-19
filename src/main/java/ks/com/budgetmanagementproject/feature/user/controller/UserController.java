@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
 import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.UserEditDto;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.service.UserService;
 import ks.com.budgetmanagementproject.global.security.AuthUtil;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
@@ -32,9 +34,8 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(operationId = "01-signup", summary = "✅ 회원가입", description = "회원가입")
+    @Operation(summary = "✅ 회원가입", description = "회원가입")
     @PostMapping("/signup")
-    @Tag(name = "User")
     public ResponseEntity<?> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
         try {
             userService.signUp(signUpReqDto);
@@ -46,9 +47,8 @@ public class UserController {
         }
     }
 
-    @Operation(operationId = "02-login", summary = "✅ 로그인", description = "로그인")
+    @Operation(summary = "✅ 로그인", description = "로그인")
     @PostMapping("/login")
-    @Tag(name = "User")
     public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, BindingResult bindingResult, HttpServletResponse response) {
 
         if (bindingResult.hasErrors()) {
@@ -57,9 +57,8 @@ public class UserController {
         return userService.login(loginReqDto, response);
     }
 
-    @Operation(operationId = "03-currentUser", summary = "✅ 로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
+    @Operation(summary = "✅ 로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
     @GetMapping("/")
-    @Tag(name = "User")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (!AuthUtil.isAuthenticated(authentication)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -76,5 +75,15 @@ public class UserController {
         }
 
         return ResponseEntity.ok(Map.of("principal", principal.toString()));
+    }
+
+    @Operation( summary = "✅ 사용자 정보 변경", description = "사용자 정보 변경")
+    @PatchMapping("/")
+    public User getUpdateUser(Authentication authentication, UserEditDto userEditDto) {
+
+        Object principal = authentication.getPrincipal();
+        String username = principal.toString();
+
+        return userService.updateUser(username, userEditDto);
     }
 }

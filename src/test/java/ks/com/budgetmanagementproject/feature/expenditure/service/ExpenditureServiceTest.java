@@ -229,7 +229,7 @@ class ExpenditureServiceTest {
             Expenditure e = Expenditure.builder().id(1L).user(user).category(food).build();
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(e));
 
-            service.expenditureDelete(1L, user);
+            service.expenditureHardDelete(1L, user);
 
             then(expenditureRepository).should().delete(e);
         }
@@ -239,7 +239,7 @@ class ExpenditureServiceTest {
             Expenditure e = Expenditure.builder().id(1L).user(other).category(food).build();
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(e));
 
-            assertThatThrownBy(() -> service.expenditureDelete(1L, user))
+            assertThatThrownBy(() -> service.expenditureHardDelete(1L, user))
                     .isInstanceOf(BaseException.class)
                     .hasMessage("권한이 없는 유저입니다.");
         }

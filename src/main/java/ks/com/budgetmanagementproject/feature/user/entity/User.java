@@ -26,6 +26,12 @@ public class User extends BaseTimeEntity {
     @Column(length = 100, nullable = false)
     private String password;
 
+    @Column(length = 50)
+    private String usernick;
+
+    @Column(length = 50)
+    private String phoneNumber;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

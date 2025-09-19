@@ -5,13 +5,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
-import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
 import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.UserEditDto;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus.*;
 
 @Slf4j
 @Service
@@ -50,10 +54,10 @@ public class UserService {
     public void signUp(@Valid SignUpReqDto signUpReqDto) {
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("USER not found"));
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
 
         if (isExistsByUsername(signUpReqDto.getUsername())) {
-            throw new IllegalArgumentException("Username is already in use");
+            throw new BaseException(DUPLICATE_EMAIL);
         }
 
         User user = User.builder()
@@ -75,10 +79,10 @@ public class UserService {
 
         Optional<User> user = userRepository.findByUsername(userLoginDto.getUsername());
         if (!user.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ID does not exist");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(LOGIN_USER_NOT_EXIST);
         }
         if (!passwordEncoder.matches(userLoginDto.getPassword(), user.get().getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("password is incorrect");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(LOGIN_USER_NOT_EXIST);
         }
 
         List<String> roles = user.get().getRoles().stream().map(Role::getName).collect(Collectors.toList());
@@ -115,5 +119,23 @@ public class UserService {
                 .build();
 
         return ResponseEntity.ok(loginResponseDto);
+    }
+
+    /**
+     * 사용자 정보 업데이트
+     * @param username Id
+     * @param userEditDto nickname, phoneNumber
+     * @return user
+     */
+    @Transactional
+    public User updateUser(String username, UserEditDto userEditDto) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
+
+        user.setUsernick(userEditDto.getUsernick());
+        user.setPhoneNumber(userEditDto.getPhoneNumber());
+
+        userRepository.save(user);
+        return user;
     }
 }

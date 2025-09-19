@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureUpdateRequest;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.global.common.model.BaseTimeEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +19,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Expenditure {
+public class Expenditure extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
