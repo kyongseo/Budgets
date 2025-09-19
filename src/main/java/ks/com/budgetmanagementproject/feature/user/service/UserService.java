@@ -54,7 +54,7 @@ public class UserService {
     public void signUp(@Valid SignUpReqDto signUpReqDto) {
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
+                .orElseThrow(() -> new BaseException(FORBIDDEN_USER));
 
         if (isExistsByUsername(signUpReqDto.getUsername())) {
             throw new BaseException(DUPLICATE_EMAIL);
