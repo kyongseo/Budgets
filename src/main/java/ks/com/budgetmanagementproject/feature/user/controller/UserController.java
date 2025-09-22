@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus.LOGIN_USER_NOT_EXIST;
+import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus.NON_EXISTENT_USER;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -52,17 +55,17 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, BindingResult bindingResult, HttpServletResponse response) {
 
         if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body("필드 에러 발생");
+            return ResponseEntity.badRequest().body(LOGIN_USER_NOT_EXIST);
         }
         return userService.login(loginReqDto, response);
     }
 
     @Operation(summary = "✅ 로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (!AuthUtil.isAuthenticated(authentication)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "로그인되지 않은 사용자입니다."));
+                    .body(Map.of("message", NON_EXISTENT_USER));
         }
 
         Object principal = authentication.getPrincipal();
@@ -78,7 +81,7 @@ public class UserController {
     }
 
     @Operation( summary = "✅ 사용자 정보 변경", description = "사용자 정보 변경")
-    @PatchMapping("/")
+    @PatchMapping()
     public User getUpdateUser(Authentication authentication, UserEditDto userEditDto) {
 
         Object principal = authentication.getPrincipal();

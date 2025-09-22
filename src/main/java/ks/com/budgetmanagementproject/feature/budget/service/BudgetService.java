@@ -105,8 +105,8 @@ public class BudgetService {
     /**
      * 예산 추천
      * totalAmount를 기존 이용중인 유저들이 설정한 평균값으로 카테고리별로 적정 금액을 나눠서 반환한다.
-     * @param totalAmount
-     * @return
+     * @param totalAmount 평균값
+     * @return list
      */
     @Transactional(readOnly = true)
     public BudgetRecommendListResponse budgetRecommend(long totalAmount) {

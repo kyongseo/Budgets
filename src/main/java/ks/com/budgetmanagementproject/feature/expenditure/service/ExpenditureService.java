@@ -116,7 +116,8 @@ public class ExpenditureService {
      */
     @Transactional(readOnly = true)
     public ExpenditureDetailResponse expenditureDetail(Long expenditureId, User user) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(()
+                -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
@@ -134,7 +135,8 @@ public class ExpenditureService {
      * @param user 사용자
      */
     public void expenditureSoftDelete(Long expenditureId, User user) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(()
+                -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
@@ -152,7 +154,8 @@ public class ExpenditureService {
      */
     @Transactional
     public void expenditureHardDelete(Long expenditureId, User user) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(()
+                -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
@@ -172,7 +175,8 @@ public class ExpenditureService {
      */
     @Transactional
     public void expenditureExceptUpdate(Long expenditureId, User user, boolean excludingTotal) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(()
+                -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
