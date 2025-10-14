@@ -205,8 +205,7 @@ public class ExpenditureService {
         StringBuilder message = new StringBuilder("이번 달 ");
         long todayExpenditurePossibleTotal = 0;
 
-        for (int i = 0; i < recommendList.size(); i++) {
-            ExpenditureRecommend recommend = recommendList.get(i);
+        for (ExpenditureRecommend recommend : recommendList) {
             if (recommend.getTodayExpenditurePossibleMoney() <= 0) {
                 /* 예산 초과시 최소 지출 가능 금액 20,000으로 설정. */
                 recommend.setTodayExpenditurePossibleMoney(20000L);
@@ -249,8 +248,7 @@ public class ExpenditureService {
 
         long totalAmount = 0L;
 
-        for (int i = 0; i < list.size(); i++) {
-            ExpenditureGuide expenditureGuide = list.get(i);
+        for (ExpenditureGuide expenditureGuide : list) {
             if (expenditureGuide.getTodayAppropriateExpenditureAmount() <= 0) {
                 expenditureGuide.setTodayAppropriateExpenditureAmount(20000L);
             }
