@@ -77,6 +77,7 @@ class BudgetServiceTest {
         }
 
         @Test
+        @DisplayName("없는 카테고리 뜨는지 테스트")
         void 실패_카테고리없음() {
             BudgetSettingRequest req = BudgetSettingRequest.builder()
                     .categoryName("없는카테고리")
