@@ -39,11 +39,14 @@ public class SecurityConfig {
         this.roleRepository = roleRepository;
     }
 
-    String[] allAllowPage = new  String[] {
-            "/",
-            "/users/**",
-            "/reissue"
+    String[] allAllowPage = new String[] {
+            "/", "/index.html", "/favicon.ico",
+            "/static/**", "/js/**",
+            "/ws-stomp/**", "/pub/**", "/sub/**",
+            "/users/**", "/reissue", "/error"
     };
+
+
 
     String[] swaggerAllowPage = new  String[] {
             "/swagger",
