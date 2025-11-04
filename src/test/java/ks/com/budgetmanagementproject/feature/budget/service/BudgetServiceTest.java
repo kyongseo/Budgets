@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -57,7 +58,7 @@ class BudgetServiceTest {
             // given
             BudgetSettingRequest req = BudgetSettingRequest.builder()
                     .categoryName("식비")
-                    .money(100_000L)
+                    .money(BigDecimal.valueOf(100_000L))
                     .period(YearMonth.from(LocalDate.of(2025, 9, 15)))
                     .build();
             given(categoryRepository.findByName("식비")).willReturn(Optional.of(food));
@@ -69,10 +70,7 @@ class BudgetServiceTest {
 
             // then
             then(budgetRepository).should().save(argThat(b ->
-                    b.getCategory().equals(food)
-                            && b.getMoney() == 100_000L
-                            && b.getPeriod().equals(key)
-                            && b.getUser().equals(user)
+                    false
             ));
         }
 
@@ -81,7 +79,7 @@ class BudgetServiceTest {
         void 실패_카테고리없음() {
             BudgetSettingRequest req = BudgetSettingRequest.builder()
                     .categoryName("없는카테고리")
-                    .money(50_000L)
+                    .money(BigDecimal.valueOf(50_000L))
                     .period(YearMonth.from(LocalDate.of(2025, 9, 1)))
                     .build();
             given(categoryRepository.findByName("없는카테고리")).willReturn(Optional.empty());
@@ -94,12 +92,12 @@ class BudgetServiceTest {
         void 실패_중복예산() {
             BudgetSettingRequest req = BudgetSettingRequest.builder()
                     .categoryName("식비")
-                    .money(50_000L)
+                    .money(BigDecimal.valueOf(50_000L))
                     .period(YearMonth.from(LocalDate.of(2025, 9, 30)))
                     .build();
             given(categoryRepository.findByName("식비")).willReturn(Optional.of(food));
             LocalDate key = LocalDate.of(2025, 9, 1);
-            Budget exists = Budget.builder().id(100L).category(food).user(user).money(10_000L).period(key).build();
+            Budget exists = Budget.builder().id(100L).category(food).user(user).money(BigDecimal.valueOf(10_000L)).period(key).build();
             given(budgetRepository.findByCategoryAndPeriodAndUser(food, key, user)).willReturn(exists);
 
             assertThatThrownBy(() -> service.budgetSetting(req, user))
@@ -115,12 +113,12 @@ class BudgetServiceTest {
         void 성공_본인소유_금액수정() {
             Budget budget = Budget.builder()
                     .id(1L).user(user).category(food)
-                    .money(100_000L)
+                    .money(BigDecimal.valueOf(100_000L))
                     .period(LocalDate.of(2025, 9, 1))
                     .build();
             given(budgetRepository.findById(1L)).willReturn(Optional.of(budget));
 
-            BudgetUpdateRequest req = BudgetUpdateRequest.builder().money(150_000L).build();
+            BudgetUpdateRequest req = BudgetUpdateRequest.builder().money(BigDecimal.valueOf(150_000L)).build();
 
             service.budgetUpdate(1L, req, user);
 
@@ -132,18 +130,18 @@ class BudgetServiceTest {
             given(budgetRepository.findById(99L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.budgetUpdate(99L,
-                    BudgetUpdateRequest.builder().money(1L).build(), user))
+                    BudgetUpdateRequest.builder().money(BigDecimal.valueOf(1L)).build(), user))
                     .isInstanceOf(BaseException.class);
         }
 
         @Test
         void 실패_소유자아님() {
-            Budget budget = Budget.builder().id(1L).user(other).category(food).money(10L)
+            Budget budget = Budget.builder().id(1L).user(other).category(food).money(BigDecimal.valueOf(10L))
                     .period(LocalDate.of(2025, 9, 1)).build();
             given(budgetRepository.findById(1L)).willReturn(Optional.of(budget));
 
             assertThatThrownBy(() -> service.budgetUpdate(1L,
-                    BudgetUpdateRequest.builder().money(1L).build(), user))
+                    BudgetUpdateRequest.builder().money(BigDecimal.valueOf(1L)).build(), user))
                     .isInstanceOf(BaseException.class);
         }
     }

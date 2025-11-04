@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -20,8 +21,7 @@ import java.time.LocalDate;
 @Table(name = "budgets")
 public class Budget {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,12 +34,12 @@ public class Budget {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private BudgetCategory category;
 
-    @Column
-    private long money;
+    @Column(precision = 14, scale = 0, nullable = false)
+    private BigDecimal money;
 
     private LocalDate period;
 
-    public void updateBudget(long money) {
+    public void updateBudget(BigDecimal money) {
         this.money = money;
     }
 }
