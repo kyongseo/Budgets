@@ -3,28 +3,23 @@ package ks.com.budgetmanagementproject.feature.user.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
 import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
 import ks.com.budgetmanagementproject.feature.user.dto.UserEditDto;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.service.UserService;
-import ks.com.budgetmanagementproject.global.security.AuthUtil;
-import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-
-import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus.LOGIN_USER_NOT_EXIST;
-import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus.NON_EXISTENT_USER;
 
 @RestController
 @RequestMapping("/users")
@@ -40,53 +35,42 @@ public class UserController {
     @Operation(summary = "✅ 회원가입", description = "회원가입")
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
-        try {
-            userService.signUp(signUpReqDto);
-            return ResponseEntity.ok(Map.of("message", "회원가입 성공"));
-        }catch (Exception e) {
-            log.error("signUp Error: {}", e.getMessage());
-            System.out.println("signUp Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "회원가입 실패",  "message", e.getMessage()));
-        }
+
+        userService.signUp(signUpReqDto);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.SIGN_UP_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.SIGN_UP_SUCCESS));
     }
 
     @Operation(summary = "✅ 로그인", description = "로그인")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, BindingResult bindingResult, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, HttpServletResponse response) {
 
-        if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body(LOGIN_USER_NOT_EXIST);
-        }
-        return userService.login(loginReqDto, response);
+        LoginResDto loginResDto = userService.login(loginReqDto, response);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.LOGIN_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.LOGIN_SUCCESS, loginResDto));
     }
 
-    @Operation(summary = "✅ 로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
-    @GetMapping()
-    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        if (!AuthUtil.isAuthenticated(authentication)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", NON_EXISTENT_USER));
-        }
+    @Operation(summary = "✅ AccessToken 재발급", description = "AccessToken 재발급")
+    @PostMapping("/refresh")
+    public ResponseEntity<?> reissueToken(HttpServletRequest request, HttpServletResponse response) {
 
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof CustomUserDetails customUser) {
-            return ResponseEntity.ok(Map.of(
-                    "username", customUser.getUsername(),
-                    "roles", customUser.getAuthorities()
-            ));
-        }
-
-        return ResponseEntity.ok(Map.of("principal", principal.toString()));
+        String newToken = userService.reissueToken(request, response);
+        return ResponseEntity
+                .status(BaseResponseStatus.ACCESS_TOKEN_REISSUE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.ACCESS_TOKEN_REISSUE_SUCCESS, newToken));
     }
 
     @Operation( summary = "✅ 사용자 정보 변경", description = "사용자 정보 변경")
     @PatchMapping()
-    public User getUpdateUser(Authentication authentication, UserEditDto userEditDto) {
+    public ResponseEntity<?> getUpdateUser(Authentication authentication, @RequestBody UserEditDto userEditDto) {
 
-        Object principal = authentication.getPrincipal();
-        String username = principal.toString();
-
-        return userService.updateUser(username, userEditDto);
+        User updated = userService.updateUser(authentication, userEditDto);
+        return ResponseEntity
+                .status(BaseResponseStatus.USER_UPDATE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.USER_UPDATE_SUCCESS, updated));
     }
 }
