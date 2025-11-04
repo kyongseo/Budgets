@@ -4,16 +4,17 @@ import ks.com.budgetmanagementproject.feature.budget.entity.Budget;
 import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetCategoryRepository;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetRepository;
-import ks.com.budgetmanagementproject.feature.expenditure.repository.ExpenditureRepository;
-import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureUpdateRequest;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.*;
 import ks.com.budgetmanagementproject.feature.expenditure.entity.Expenditure;
+import ks.com.budgetmanagementproject.feature.expenditure.repository.ExpenditureRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -58,7 +59,8 @@ public class ExpenditureService {
             throw new BaseException(NON_EXISTENT_BUDGET);
         }
 
-        budget.updateBudget(budget.getMoney() - request.getMoney());
+        BigDecimal updatedMoney = budget.getMoney().subtract(request.getMoney());
+        budget.updateBudget(updatedMoney);
     }
 
     /**
@@ -96,14 +98,23 @@ public class ExpenditureService {
      */
     @Transactional(readOnly = true)
     public ExpenditureListResponse expenditureList(LocalDate minPeriod, LocalDate maxPeriod,
-                                                   String categoryName, long minMoney, long maxMoney, User user) {
-        BudgetCategory category = categoryRepository.findByName(categoryName).orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
-        List<ExpenditureList> expenditureList = expenditureRepository.findExpenditureList(minPeriod, maxPeriod, category, user, minMoney, maxMoney);
-        long viewMoneyTotal = expenditureRepository.findViewMoneyTotal(minPeriod, maxPeriod, category, user, minMoney, maxMoney);
-        long totalCategoryMoneyTotal = expenditureRepository.findTotalByCategory(category, user);
+                                                   String categoryName, BigDecimal minMoney, BigDecimal maxMoney, User user) {
 
-        return new ExpenditureListResponse(expenditureList, viewMoneyTotal, totalCategoryMoneyTotal);
+        BudgetCategory category = categoryRepository.findByName(categoryName)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
+
+        List<ExpenditureList> expenditureList =
+                expenditureRepository.findExpenditureList(minPeriod, maxPeriod, category, user, minMoney, maxMoney);
+
+        Long viewMoneyTotal =
+                expenditureRepository.findViewMoneyTotal(minPeriod, maxPeriod, category, user, minMoney, maxMoney);
+
+        Long totalCategoryMoneyTotal =
+                expenditureRepository.findTotalByCategory(category, user);
+
+        return ExpenditureListResponse.of(expenditureList, viewMoneyTotal, totalCategoryMoneyTotal);
     }
+
 
     /**
      * 지출 상세 조회
@@ -246,14 +257,22 @@ public class ExpenditureService {
 
         List<ExpenditureGuide> list = expenditureRepository.findByExpenditureAmount(user, start, today, period);
 
-        long totalAmount = 0L;
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (ExpenditureGuide expenditureGuide : list) {
-            if (expenditureGuide.getTodayAppropriateExpenditureAmount() <= 0) {
-                expenditureGuide.setTodayAppropriateExpenditureAmount(20000L);
+            // 적정 지출 금액이 0 이하면 기본값 20,000원 설정
+            if (expenditureGuide.getTodayAppropriateExpenditureAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                expenditureGuide.setTodayAppropriateExpenditureAmount(BigDecimal.valueOf(20000));
             }
-            totalAmount += expenditureGuide.getTodayExpenditureAmount();
-            expenditureGuide.setRisk(expenditureGuide.getTodayExpenditureAmount() * 100 / expenditureGuide.getTodayAppropriateExpenditureAmount() + "%");
+
+            // 총 지출 금액 누적
+            totalAmount = totalAmount.add(expenditureGuide.getTodayExpenditureAmount());
+
+            // 위험도 계산 (오늘 지출 / 적정 지출 * 100)
+            BigDecimal risk = expenditureGuide.getTodayExpenditureAmount()
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(expenditureGuide.getTodayAppropriateExpenditureAmount(), 0, RoundingMode.HALF_UP);
+            expenditureGuide.setRisk(risk + "%");
         }
 
         return new ExpenditureGuideResponse(list, totalAmount);

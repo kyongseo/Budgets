@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,9 +16,9 @@ public class ExpenditureGuide {
 
     private BudgetCategory category;
 
-    private long todayExpenditureAmount;
+    private BigDecimal todayExpenditureAmount;
 
-    private long todayAppropriateExpenditureAmount;
+    private BigDecimal todayAppropriateExpenditureAmount;
 
     private String risk;
 }

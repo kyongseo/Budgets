@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -43,8 +44,8 @@ public class Expenditure extends BaseTimeEntity {
     @Column
     private boolean excludingTotal;
 
-    @Column
-    private long money;
+    @Column(nullable = false)
+    private BigDecimal money;
 
     public void updateExpenditure(ExpenditureUpdateRequest request, BudgetCategory category) {
         this.money = request.getMoney();
