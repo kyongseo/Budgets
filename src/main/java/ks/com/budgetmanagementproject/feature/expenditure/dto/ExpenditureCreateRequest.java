@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -18,7 +19,7 @@ public class ExpenditureCreateRequest {
 
     @Schema(description = "지출 금액", example = "20000")
     @NotNull(message = "지출 금액을 입력해주세요.")
-    private long money;
+    private BigDecimal money;
 
     @Schema(description = "지출 카테고리", example = "식비")
     @NotBlank(message = "카테고리를 입력해주세요")

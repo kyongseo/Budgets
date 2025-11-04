@@ -36,7 +36,8 @@ public class BudgetService {
      */
     @Transactional
     public void budgetSetting(BudgetSettingRequest request, User user) {
-        BudgetCategory category = categoryRepository.findByName(request.getCategoryName()).orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
+        BudgetCategory category = categoryRepository.findByName(request.getCategoryName())
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
         existsByBudget(request, user, category);
         LocalDate date = LocalDate.of(request.getPeriod().getYear(), request.getPeriod().getMonth(), 1);
         Budget budget = Budget.builder()

@@ -63,9 +63,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         addRefreshEntity(username, refreshToken, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
 
-        //response.setHeader("accessToken", accessToken);
         response.addCookie(createCookie("accessToken", accessToken, false));
         response.addCookie(createCookie("refreshToken", refreshToken, true));
+        response.setHeader("accessToken", accessToken);
         response.setStatus(HttpStatus.OK.value());
     }
 
@@ -86,12 +86,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     private Cookie createCookie(String key, String value, boolean httpOnly) {
-
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setMaxAge(24 * 60 * 60);
+        cookie.setSecure(false); // ✅ HTTP 환경에서는 false
+        cookie.setPath("/"); // ✅ 모든 경로에서 전송 가능
+        cookie.setHttpOnly(httpOnly);
+        cookie.setAttribute("SameSite", "Lax"); // ✅ Lax면 정상적으로 서버 렌더링 요청에 전송됨
         return cookie;
     }
 }

@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -60,7 +61,7 @@ class ExpenditureServiceTest {
 
             // given
             ExpenditureCreateRequest req = ExpenditureCreateRequest.builder()
-                    .money(30_000L).memo("점심").categoryName("식비")
+                    .money(BigDecimal.valueOf(30_000L)).memo("점심").categoryName("식비")
                     .period(LocalDate.of(2025, 9, 10)).build();
 
             given(categoryRepository.findByName("식비")).willReturn(Optional.of(food));
@@ -71,7 +72,7 @@ class ExpenditureServiceTest {
                     .id(100L)
                     .category(food)
                     .user(user)
-                    .money(100_000L)
+                    .money(BigDecimal.valueOf(100_000L))
                     .period(start)
                     .build();
 
@@ -90,7 +91,7 @@ class ExpenditureServiceTest {
         void 실패_카테고리없음() {
             // given
             ExpenditureCreateRequest req = ExpenditureCreateRequest.builder()
-                    .money(10_000L).memo("커피").categoryName("없는카테고리")
+                    .money(BigDecimal.valueOf(10_000L)).memo("커피").categoryName("없는카테고리")
                     .period(LocalDate.of(2025, 9, 2)).build();
 
             given(categoryRepository.findByName("없는카테고리")).willReturn(Optional.empty());
@@ -105,7 +106,7 @@ class ExpenditureServiceTest {
         void 실패_예산없음() {
             // given
             ExpenditureCreateRequest req = ExpenditureCreateRequest.builder()
-                    .money(10_000L).memo("커피").categoryName("식비")
+                    .money(BigDecimal.valueOf(10_000L)).memo("커피").categoryName("식비")
                     .period(LocalDate.of(2025, 9, 2)).build();
 
             given(categoryRepository.findByName("식비")).willReturn(Optional.of(food));
@@ -128,11 +129,11 @@ class ExpenditureServiceTest {
         void 성공_본인소유_카테고리존재() {
             // given
             ExpenditureUpdateRequest req = ExpenditureUpdateRequest.builder()
-                    .money(50_000L).memo("저녁").categoryName("식비")
+                    .money(BigDecimal.valueOf(50_000L)).memo("저녁").categoryName("식비")
                     .period(LocalDate.of(2025, 9, 12)).build();
 
             Expenditure entity = Expenditure.builder().id(1L).user(user)
-                    .category(food).money(10_000L).memo("old").period(anyPeriod).build();
+                    .category(food).money(BigDecimal.valueOf(10_000L)).memo("old").period(anyPeriod).build();
 
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(entity));
             given(categoryRepository.findByName("식비")).willReturn(Optional.of(food));
@@ -150,7 +151,7 @@ class ExpenditureServiceTest {
         @Test
         void 실패_소유자아님() {
             Expenditure entity = Expenditure.builder().id(1L).user(other)
-                    .category(food).money(10_000L).memo("old").period(anyPeriod).build();
+                    .category(food).money(BigDecimal.valueOf(10_000L)).memo("old").period(anyPeriod).build();
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(entity));
             given(categoryRepository.findByName(anyString())).willReturn(Optional.of(food));
 
@@ -172,7 +173,7 @@ class ExpenditureServiceTest {
         @Test
         void 실패_카테고리없음() {
             Expenditure entity = Expenditure.builder().id(1L).user(user)
-                    .category(food).money(10_000L).memo("old").period(anyPeriod).build();
+                    .category(food).money(BigDecimal.valueOf(10_000L)).memo("old").period(anyPeriod).build();
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(entity));
             given(categoryRepository.findByName("식비")).willReturn(Optional.empty());
 
@@ -190,7 +191,7 @@ class ExpenditureServiceTest {
         @Test
         void 성공_본인소유() {
             Expenditure e = Expenditure.builder().id(1L).user(user)
-                    .memo("메모").period(anyPeriod).category(food).excludingTotal(false).money(12_345L).build();
+                    .memo("메모").period(anyPeriod).category(food).excludingTotal(false).money(BigDecimal.valueOf(12_345L)).build();
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(e));
 
             ExpenditureDetailResponse resp = service.expenditureDetail(1L, user);
@@ -203,7 +204,7 @@ class ExpenditureServiceTest {
         @Test
         void 실패_소유자아님() {
             Expenditure e = Expenditure.builder().id(1L).user(other)
-                    .memo("메모").period(anyPeriod).category(food).excludingTotal(false).money(12_345L).build();
+                    .memo("메모").period(anyPeriod).category(food).excludingTotal(false).money(BigDecimal.valueOf(12_345L)).build();
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(e));
 
             assertThatThrownBy(() -> service.expenditureDetail(1L, user))

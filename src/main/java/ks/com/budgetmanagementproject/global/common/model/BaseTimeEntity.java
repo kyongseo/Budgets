@@ -15,14 +15,14 @@ import java.time.ZoneOffset;
 public abstract class BaseTimeEntity {
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamptz")
     private OffsetDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = false, columnDefinition = "timestamptz")
     private OffsetDateTime updatedAt;
 
-    @Column(name = "deleted_at")
+    @Column(name = "deleted_at", columnDefinition = "timestamptz")
     private OffsetDateTime deletedAt;
 
     public void softDeleted() {

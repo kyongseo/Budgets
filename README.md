@@ -25,11 +25,13 @@
 ## Skils
 언어 및 프레임워크: ![Static Badge](https://img.shields.io/badge/Java-red)
 ![Static Badge](https://img.shields.io/badge/SpringBoot-grean)
-![Static Badge](https://img.shields.io/badge/SpringDataJPA-grean)
+![Static Badge](https://img.shields.io/badge/SpringDataJPA-orange)
 <br/>
 DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 ![Static Badge](https://img.shields.io/badge/Redis-yellow)
-
+<br/>
+ETC: ![Static Badge](https://img.shields.io/badge/SpringSecurity-pink)
+![Static Badge](https://img.shields.io/badge/Kafka-skyblue)
 <br/>
 
 ## ERD
@@ -39,7 +41,7 @@ DB: ![Static Badge](https://img.shields.io/badge/postgreSQL-blue)
 
 ## 프로젝트 설계 및 일정관리
 
-link : [일정관리](https://great-product-fd5.notion.site/b7b4131ed6874ff6825c62499d183230?source=copy_link)
+Notion_Link : [일정관리](https://great-product-fd5.notion.site/b7b4131ed6874ff6825c62499d183230?source=copy_link)
 
 ### API Reference
 

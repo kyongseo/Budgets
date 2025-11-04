@@ -26,11 +26,19 @@ spring:
     init:
       mode: always
       data-locations: classpath:data.sql
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: chat-websocket-group
+      auto-offset-reset: latest
+      enable-auto-commit: true
+    producer:
+      acks: 1
 logging:
   level:
-    org:
-      hibernate:
-        SQL: DEBUG
+    ks.com.budgetmanagementproject: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
 
 springdoc:
   swagger-ui:

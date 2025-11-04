@@ -7,13 +7,13 @@ SELECT 'ADMIN' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name='ADMIN');
 
 -- admin user
 INSERT INTO users(username, password, created_at, updated_at)
-SELECT 'admin@domain.com', '{noop}admin', now(), now()
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username='admin@domain.com');
+SELECT 'pokj930@naver.com', '{noop}admin', now(), now()
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE username='pokj930@naver.com');
 
 -- user_roles (ADMIN 부여)
 INSERT INTO user_roles(user_id, role_id)
 SELECT u.id, r.id
-FROM (SELECT id FROM users WHERE username='admin@domain.com') u,
+FROM (SELECT id FROM users WHERE username='pokj930@naver.com') u,
      (SELECT id FROM roles  WHERE name='ADMIN') r
 WHERE NOT EXISTS (
     SELECT 1 FROM user_roles WHERE user_id=u.id AND role_id=r.id
@@ -36,3 +36,9 @@ INSERT INTO budget_category(name) SELECT '세금/공과금' WHERE NOT EXISTS (SE
 INSERT INTO budget_category(name) SELECT '저축/투자'   WHERE NOT EXISTS (SELECT 1 FROM budget_category WHERE name='저축/투자');
 INSERT INTO budget_category(name) SELECT '반려동물'    WHERE NOT EXISTS (SELECT 1 FROM budget_category WHERE name='반려동물');
 INSERT INTO budget_category(name) SELECT '기타'        WHERE NOT EXISTS (SELECT 1 FROM budget_category WHERE name='기타');
+
+ALTER TABLE expenditure
+    ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now() NOT NULL;
+
+ALTER TABLE expenditure
+    ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now() NOT NULL;
