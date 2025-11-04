@@ -1,27 +1,28 @@
 package ks.com.budgetmanagementproject.feature.chat.controller;
 
-import ks.com.budgetmanagementproject.feature.chat.dto.ChatMessage;
+import jakarta.servlet.http.HttpServletRequest;
+import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-
-import java.security.Principal;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final JWTUtil jwtUtil;
 
-    // /pub/chat/{roomId} 로 받은 메시지를 /sub/{roomId} 로 전달
-    @MessageMapping("/chat/{roomId}")
-    public void sendMessage(@DestinationVariable String roomId, ChatMessage message, Principal principal) {
+    @GetMapping("/chat")
+    public String chatPage(Model model, HttpServletRequest request) {
+        String accessToken = jwtUtil.getAccessTokenFromCookies(request);
 
-        message.setSender(principal.getName());
-        message.setRoomId(roomId);
+        String username = "익명";
+        if (accessToken != null && !jwtUtil.isExpiredDate(accessToken)) {
+            username = jwtUtil.getUsername(accessToken);
+        }
 
-        messagingTemplate.convertAndSend("/sub/" + roomId, message);
+        model.addAttribute("username", username);
+        return "chat";
     }
 }
