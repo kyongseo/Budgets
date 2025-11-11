@@ -26,14 +26,7 @@ spring:
     init:
       mode: always
       data-locations: classpath:data.sql
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: chat-websocket-group
-      auto-offset-reset: latest
-      enable-auto-commit: true
-    producer:
-      acks: 1
+
 logging:
   level:
     ks.com.budgetmanagementproject: DEBUG
@@ -43,8 +36,8 @@ logging:
 springdoc:
   swagger-ui:
     display-operation-id: true
-    operationsSorter: "(a,b)=>{const ord=o=>o.operation?.['x-order'] ?? parseInt((o.operation?.operationId||'').match(/^\\d+/)?.[0]||'0',10); return ord(a)-ord(b);}"
-    tagsSorter: "alpha"
+#    operationsSorter: "(a,b)=>{const ord=o=>o.operation?.['x-order'] ?? parseInt((o.operation?.operationId||'').match(/^\\d+/)?.[0]||'0',10); return ord(a)-ord(b);}"
+#    tagsSorter: "alpha"
     path: /swagger-ui.html
   cache:
     disabled: true

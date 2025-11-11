@@ -23,7 +23,6 @@ public class KafkaProducerConfig {
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         config.put(ProducerConfig.ACKS_CONFIG, "1");
         config.put(ProducerConfig.RETRIES_CONFIG, 3);
-        // ✅ 타입 헤더 추가 (Consumer가 역직렬화할 수 있도록)
         config.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, true);
 
         return new DefaultKafkaProducerFactory<>(config);
