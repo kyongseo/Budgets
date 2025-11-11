@@ -26,9 +26,7 @@ import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionS
 public class ExpenditureService {
 
     private final ExpenditureRepository expenditureRepository;
-
     private final BudgetCategoryRepository categoryRepository;
-
     private final BudgetRepository budgetRepository;
 
     /**
@@ -206,7 +204,6 @@ public class ExpenditureService {
     @Transactional(readOnly = true)
     public ExpenditureRecommendResponse expenditureRecommend(User user) {
         LocalDate today = LocalDate.now();
-        /* start는 예산을 처음 저장할 때 YearMonth로 저장했기 때문에 DB에서 찾을 때 사용하기 위함. */
         LocalDate start = today.withDayOfMonth(1);
         LocalDate end = today.withDayOfMonth(today.lengthOfMonth());
         long period = ChronoUnit.DAYS.between(today, end);

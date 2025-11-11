@@ -21,6 +21,7 @@ import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +49,7 @@ public class UserService {
     }
 
     /**
-     * 회원 가입
+     * 회원가입
      * @param signUpReqDto : 이메일, 비밀번호
      */
     @Transactional
@@ -73,8 +74,8 @@ public class UserService {
     /**
      * 로그인
      * @param userLoginDto 이메일, 비밀번호
-     * @param response Token 저장 위치
-     * @return response
+     * @param response 응답
+     * @return 토큰
      */
     public LoginResDto login(LoginReqDto userLoginDto, HttpServletResponse response) {
 
@@ -123,7 +124,10 @@ public class UserService {
     }
 
     /**
-     * 재발급
+     * accessToken 재발급
+     * @param request 요청
+     * @param response 응답
+     * @return newAccessToken
      */
     public String reissueToken(HttpServletRequest request, HttpServletResponse response) {
 
@@ -154,6 +158,49 @@ public class UserService {
         return newAccessToken;
     }
 
+    /**
+     * 사용자 정보 업데이트
+     * @param authentication 인증정보
+     * @param userEditDto nickname, phoneNumber
+     * @return 저장
+     */
+    @Transactional
+    public User updateUser(Authentication authentication, UserEditDto userEditDto) {
+        if (!(authentication.getPrincipal() instanceof CustomUserDetails customUser))
+            throw new BaseException(NON_EXISTENT_USER);
+
+        User user = userRepository.findByUsername(customUser.getUsername())
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
+
+        user.setNickname(userEditDto.getNickname());
+        user.setPhoneNumber(userEditDto.getPhoneNumber());
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * 로그아웃 처리
+     * @param response HTTP 응답
+     */
+    public void logout(HttpServletResponse response) {
+
+        String accessToken = response.getHeader("accessToken");
+        String refreshToken = response.getHeader("refreshToken");
+
+        if (accessToken == null && refreshToken == null) {
+            return;
+        }
+        SecurityContextHolder.clearContext();
+
+        if (accessToken != null) {
+            deleteCookie(response, "accessToken");
+        }
+        if (refreshToken != null) {
+            deleteCookie(response, "refreshToken");
+            // refreshTokenRepository.deleteByToken(refreshToken);
+        }
+    }
+
     private String resolveRefreshToken(HttpServletRequest request) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
@@ -165,23 +212,12 @@ public class UserService {
         return null;
     }
 
-    /**
-     * 사용자 정보 업데이트
-     * @param authentication Id
-     * @param userEditDto nickname, phoneNumber
-     * @return user
-     */
-    @Transactional
-    public User updateUser(Authentication authentication, UserEditDto userEditDto) {
-        if (!(authentication.getPrincipal() instanceof CustomUserDetails customUser))
-            throw new BaseException(NON_EXISTENT_USER);
-
-        User user = userRepository.findByUsername(customUser.getUsername())
-                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
-
-        user.setUsernick(userEditDto.getUsernick());
-        user.setPhoneNumber(userEditDto.getPhoneNumber());
-
-        return userRepository.save(user);
+    private void deleteCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        response.addCookie(cookie);
     }
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import ks.com.budgetmanagementproject.feature.chat.dto.ChatMessage;
+import ks.com.budgetmanagementproject.feature.chat.entity.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,6 +17,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -48,11 +49,20 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
             ChatMessage chatMessage = objectMapper.readValue(payload, ChatMessage.class);
 
-            // Kafka로 발행
-            kafkaTemplate.send("chat", chatMessage.getRoomId(), chatMessage);
-            log.info("📤 Kafka 발행 완료: roomId={}, sender={}, message={}",
-                    chatMessage.getRoomId(), chatMessage.getSender(), chatMessage.getMessage());
+            if (chatMessage.getMessageId() == null) {
+                chatMessage.setMessageId(UUID.randomUUID().toString());
+            }
 
+            kafkaTemplate.send("chat", chatMessage.getRoomId(), chatMessage);
+
+            log.info("📤 Kafka 발행 완료: messageId={}, roomId={}, sender={}, message={}",
+                    chatMessage.getMessageId(),
+                    chatMessage.getRoomId(),
+                    chatMessage.getSender(),
+                    chatMessage.getMessage());
+
+        } catch (JsonProcessingException e) {
+            log.error("❌ JSON 파싱 실패: {}", message.getPayload(), e);
         } catch (Exception e) {
             log.error("❌ 메시지 처리 실패", e);
         }
@@ -88,9 +98,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         try {
             String payload = objectMapper.writeValueAsString(message);
             TextMessage textMessage = new TextMessage(payload);
-
-            log.info("📨 브로드캐스트: roomId={}, 세션 수={}, sender={}, message={}",
-                    roomId, sessions.size(), message.getSender(), message.getMessage());
 
             sessions.forEach(session -> {
                 try {

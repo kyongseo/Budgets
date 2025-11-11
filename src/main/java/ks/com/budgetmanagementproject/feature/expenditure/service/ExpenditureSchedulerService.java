@@ -1,21 +1,23 @@
 package ks.com.budgetmanagementproject.feature.expenditure.service;
 
+import jakarta.mail.internet.MimeMessage;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureGuideResponse;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureRecommendResponse;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 
 @RequiredArgsConstructor
 @Component
@@ -26,6 +28,7 @@ public class ExpenditureSchedulerService {
     private final ExpenditureService expenditureService;
     private final UserRepository userRepository;
     private final JavaMailSender mailSender;
+    private final TemplateEngine templateEngine;
 
     private static final Set<String> BLOCKED_DOMAINS = Set.of("example.com");
 
@@ -38,94 +41,129 @@ public class ExpenditureSchedulerService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 26 15 * * ?", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 40 11 * * ?", zone = "Asia/Seoul")
     public void expenditureRecommendScheduler() {
         List<User> users = userRepository.findAll();
-        log.info("[expenditureRecommendScheduler] start: users={}", users.size());
+        log.info("====================================");
+        log.info("[expenditureRecommendScheduler] 스케줄러 시작");
+        log.info("[expenditureRecommendScheduler] 대상 사용자 수: {}", users.size());
+        log.info("====================================");
+
+        int successCount = 0;
+        int failCount = 0;
+        int skipCount = 0;
 
         for (User user : users) {
             String to = user.getUsername();
+
             if (!deliverable(to)) {
-                log.warn("[expenditureRecommendScheduler] skip invalid recipient: {}", to);
+                log.warn("[expenditureRecommendScheduler] ❌ 유효하지 않은 이메일 주소로 스킵: {}", to);
+                skipCount++;
                 continue;
             }
+
             try {
+                log.info("[expenditureRecommendScheduler] 🔄 처리 시작 - 사용자: {}", to);
+
                 ExpenditureRecommendResponse response = expenditureService.expenditureRecommend(user);
+                log.info("[expenditureRecommendScheduler]   ├─ 오늘 지출 가능 총액: {}원",
+                        String.format("%,d", response.getTodayExpenditurePossibleTotal()));
+                log.info("[expenditureRecommendScheduler]   ├─ 추천 카테고리 수: {}",
+                        response.getRecommendList() != null ? response.getRecommendList().size() : 0);
 
-                // 본문 구성
-                StringJoiner joiner = new StringJoiner("\n");
-                if (response.getRecommendList() != null && !response.getRecommendList().isEmpty()) {
-                    response.getRecommendList().forEach(rec ->
-                            joiner.add(String.format("· %s: %,d원",
-                                    rec.getCategory().getName(),
-                                    rec.getTodayExpenditurePossibleMoney()))
-                    );
-                } else {
-                    joiner.add("(추천 항목 없음: 예산 미설정 또는 이번 달 예산 초과)");
-                }
+                // Thymeleaf 템플릿 처리
+                Context context = new Context();
+                context.setVariable("totalAmount", response.getTodayExpenditurePossibleTotal());
+                context.setVariable("recommendList", response.getRecommendList());
+                context.setVariable("message", response.getMessage());
 
-                String text = "오늘의 카테고리별 지출 추천 금액:\n" + joiner +
-                        "\n오늘 지출 총 가능 금액: " + String.format("%,d원", response.getTodayExpenditurePossibleTotal()) +
-                        "\n메시지: " + response.getMessage();
+                String htmlContent = templateEngine.process("email/expenditure-recommend", context);
 
-                SimpleMailMessage mailMessage = new SimpleMailMessage();
-                mailMessage.setFrom("pokj930@naver.com");      // 발신자(네이버)
-                mailMessage.setTo(to);                          // 수신자(모든 유저)
-                mailMessage.setSubject("안녕하세요! BudgetManagement 서비스 입니다. 오늘의 지출 금액을 추천해드려요!");
-                mailMessage.setText(text);
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+                helper.setFrom("pokj930@naver.com");
+                helper.setTo(to);
+                helper.setSubject("💰 [Budget Management] 오늘의 지출 추천 안내");
+                helper.setText(htmlContent, true);
 
-                mailSender.send(mailMessage);
-                log.info("[expenditureRecommendScheduler] sent to {}", to);
+                mailSender.send(mimeMessage);
+                successCount++;
+                log.info("[expenditureRecommendScheduler]   └─ ✅ 이메일 발송 성공: {}", to);
+
             } catch (Exception e) {
-                log.error("[expenditureRecommendScheduler] mail send fail for {}", to, e);
+                failCount++;
+                log.error("[expenditureRecommendScheduler]   └─ ❌ 이메일 발송 실패: {}", to, e);
+                log.error("[expenditureRecommendScheduler]      에러 메시지: {}", e.getMessage());
             }
         }
-        log.info("[expenditureRecommendScheduler] done");
+
+        log.info("====================================");
+        log.info("[expenditureRecommendScheduler] 스케줄러 완료");
+        log.info("[expenditureRecommendScheduler] ✅ 성공: {}건, ❌ 실패: {}건, ⏭️ 스킵: {}건",
+                successCount, failCount, skipCount);
+        log.info("====================================");
     }
 
     @Transactional
     @Scheduled(cron = "0 0 20 * * ?", zone = "Asia/Seoul")
     public void expenditureGuideScheduler() {
         List<User> users = userRepository.findAll();
-        log.info("[expenditureGuideScheduler] start: users={}", users.size());
+        log.info("====================================");
+        log.info("[expenditureGuideScheduler] 스케줄러 시작");
+        log.info("[expenditureGuideScheduler] 대상 사용자 수: {}", users.size());
+        log.info("====================================");
+
+        int successCount = 0;
+        int failCount = 0;
+        int skipCount = 0;
 
         for (User user : users) {
             String to = user.getUsername();
+
             if (!deliverable(to)) {
-                log.warn("[expenditureGuideScheduler] skip invalid recipient: {}", to);
+                log.warn("[expenditureGuideScheduler] ❌ 유효하지 않은 이메일 주소로 스킵: {}", to);
+                skipCount++;
                 continue;
             }
+
             try {
+                log.info("[expenditureGuideScheduler] 🔄 처리 시작 - 사용자: {}", to);
+
                 ExpenditureGuideResponse response = expenditureService.expenditureGuide(user);
+                log.info("[expenditureGuideScheduler]   ├─ 오늘 총 지출: {}원",
+                        String.format("%,d", response.getTotalAmount()));
+                log.info("[expenditureGuideScheduler]   ├─ 지출 카테고리 수: {}",
+                        response.getGuideList() != null ? response.getGuideList().size() : 0);
 
-                StringJoiner joiner = new StringJoiner("\n");
-                if (response.getGuideList() != null && !response.getGuideList().isEmpty()) {
-                    response.getGuideList().forEach(g ->
-                            joiner.add(String.format("· %s | 오늘: %,d원 / 적정: %,d원 | 위험도: %s",
-                                    g.getCategory().getName(),
-                                    g.getTodayExpenditureAmount(),
-                                    g.getTodayAppropriateExpenditureAmount(),
-                                    g.getRisk()))
-                    );
-                } else {
-                    joiner.add("(오늘 지출 내역 없음)");
-                }
+                // Thymeleaf 템플릿 처리
+                Context context = new Context();
+                context.setVariable("totalAmount", response.getTotalAmount());
+                context.setVariable("guideList", response.getGuideList());
 
-                String text = "오늘 카테고리별 지출 금액:\n" + joiner +
-                        "\n오늘 총 지출 금액: " + String.format("%,d원", response.getTotalAmount());
+                String htmlContent = templateEngine.process("email/expenditure-guide", context);
 
-                SimpleMailMessage mailMessage = new SimpleMailMessage();
-                mailMessage.setFrom("pokj930@naver.com");  // 발신자 고정
-                mailMessage.setTo(to);
-                mailMessage.setSubject("안녕하세요! BudgetManagement 서비스 입니다. 오늘의 지출 내역을 안내해드려요!");
-                mailMessage.setText(text);
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+                helper.setFrom("pokj930@naver.com");
+                helper.setTo(to);
+                helper.setSubject("📝 [Budget Management] 오늘의 지출 내역 안내");
+                helper.setText(htmlContent, true);
 
-                mailSender.send(mailMessage);
-                log.info("[expenditureGuideScheduler] sent to {}", to);
+                mailSender.send(mimeMessage);
+                successCount++;
+                log.info("[expenditureGuideScheduler]   └─ ✅ 이메일 발송 성공: {}", to);
+
             } catch (Exception e) {
-                log.error("[expenditureGuideScheduler] mail send fail for {}", to, e);
+                failCount++;
+                log.error("[expenditureGuideScheduler]   └─ ❌ 이메일 발송 실패: {}", to, e);
+                log.error("[expenditureGuideScheduler]      에러 메시지: {}", e.getMessage());
             }
         }
-        log.info("[expenditureGuideScheduler] done");
+
+        log.info("====================================");
+        log.info("[expenditureGuideScheduler] 스케줄러 완료");
+        log.info("[expenditureGuideScheduler] ✅ 성공: {}건, ❌ 실패: {}건, ⏭️ 스킵: {}건",
+                successCount, failCount, skipCount);
+        log.info("====================================");
     }
 }
