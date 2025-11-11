@@ -1,6 +1,6 @@
 package ks.com.budgetmanagementproject.global.config;
 
-import ks.com.budgetmanagementproject.feature.chat.dto.ChatMessage;
+import ks.com.budgetmanagementproject.feature.chat.entity.ChatMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -28,10 +28,9 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
 
-        // JsonDeserializer 설정
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         props.put(JsonDeserializer.VALUE_DEFAULT_TYPE,
-                "ks.com.budgetmanagementproject.feature.chat.dto.ChatMessage");
+                "ks.com.budgetmanagementproject.feature.chat.entity.ChatMessage");
         props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
         return new DefaultKafkaConsumerFactory<>(
