@@ -1,6 +1,7 @@
 package ks.com.budgetmanagementproject.feature.budget.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import lombok.AllArgsConstructor;
@@ -37,6 +38,7 @@ public class Budget {
     @Column(precision = 14, scale = 0, nullable = false)
     private BigDecimal money;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDate period;
 
     public void updateBudget(BigDecimal money) {

@@ -19,5 +19,4 @@ public class BudgetCategory {
 
     @Column(length = 20)
     private String name;
-
 }
