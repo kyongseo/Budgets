@@ -33,7 +33,18 @@ public enum BaseResponseStatus {
     EXPENDITURE_HARD_DELETE_SUCCESS(HttpStatus.OK, "지출 삭제(hard)에 성공했습니다."),
     EXPENDITURE_EXCEPT_UPDATE_SUCCESS(HttpStatus.OK, "지출 합계 제외 업데이트에 성공했습니다."),
     EXPENDITURE_RECOMMEND_SUCCESS(HttpStatus.OK, "지출 추천에 성공했습니다."),
-    EXPENDITURE_GUIDE_SUCCESS(HttpStatus.OK, "지출 안내 조회에 성공했습니다.");
+    EXPENDITURE_GUIDE_SUCCESS(HttpStatus.OK, "지출 안내 조회에 성공했습니다."),
+
+    // ChatRoom
+    CHATROOM_CREATE_SUCCESS(HttpStatus.CREATED,  "채팅방이 생성되었습니다."),
+    CHATROOM_LIST_SUCCESS(HttpStatus.OK,  "채팅방 목록 조회에 성공했습니다."),
+    CHATROOM_DETAIL_SUCCESS(HttpStatus.OK,  "채팅방 상세 조회에 성공했습니다."),
+    CHATROOM_JOIN_SUCCESS(HttpStatus.OK, "채팅방에 입장했습니다."),
+    CHATROOM_LEAVE_SUCCESS(HttpStatus.OK, "채팅방에서 나갔습니다.");
+
+
+
+
 
     private final HttpStatus status;
     private final String message;
