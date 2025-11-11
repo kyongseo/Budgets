@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 지출 추천</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;">
+<div style="max-width: 600px; margin: 40px auto; padding: 0; background-color: #f9f9f9;">
+
+    <!-- 헤더 -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: bold;">💰 오늘의 지출 추천</h1>
+        <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Budget Management Service</p>
+    </div>
+
+    <!-- 본문 -->
+    <div style="background-color: white; padding: 40px 30px;">
+
+        <!-- 총 가능 금액 -->
+        <div style="background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%); padding: 25px; border-radius: 12px; margin-bottom: 30px; text-align: center; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);">
+            <p style="margin: 0; font-size: 14px; color: #666; font-weight: 500;">오늘 지출 가능 총액</p>
+            <h2 style="margin: 15px 0 0 0; color: #667eea; font-size: 36px; font-weight: bold;" th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'">0원</h2>
+        </div>
+
+        <!-- 카테고리별 추천 -->
+        <h3 style="color: #333; margin: 0 0 20px 0; font-size: 18px; font-weight: bold;">📊 카테고리별 추천 금액</h3>
+
+        <div th:if="${recommendList != null and !recommendList.isEmpty()}">
+            <div style="background-color: #fafafa; border-radius: 12px; padding: 5px; overflow: hidden;">
+                <div th:each="rec, iterStat : ${recommendList}"
+                     style="padding: 18px 20px; border-bottom: 1px solid #e0e0e0;"
+                     th:style="${iterStat.last} ? 'padding: 18px 20px; border-bottom: none;' : 'padding: 18px 20px; border-bottom: 1px solid #e0e0e0;'">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #555; font-weight: 600; font-size: 15px;" th:text="${rec.category.name}">카테고리</span>
+                        <span style="color: #667eea; font-weight: bold; font-size: 16px;" th:text="${#numbers.formatInteger(rec.todayExpenditurePossibleMoney, 0, 'COMMA')} + '원'">0원</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${recommendList == null or recommendList.isEmpty()}"
+             style="background-color: #fff3cd; padding: 20px; border-radius: 12px; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; color: #856404; font-size: 15px;">⚠️ 추천 항목 없음: 예산 미설정 또는 이번 달 예산 초과</p>
+        </div>
+
+        <!-- 메시지 -->
+        <div th:if="${message != null and !#strings.isEmpty(message)}"
+             style="margin-top: 30px; padding: 20px; background-color: #e8f5e9; border-radius: 12px; border-left: 4px solid #4caf50;">
+            <p style="margin: 0; color: #2e7d32; font-size: 15px; line-height: 1.6;">
+                <span style="font-weight: bold;">💡 메시지:</span>
+                <span th:text="${message}">메시지 내용</span>
+            </p>
+        </div>
+
+    </div>
+
+    <!-- 푸터 -->
+    <div style="background-color: #f5f5f5; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+        <p style="margin: 0; font-size: 12px; color: #999;">
+            본 메일은 Budget Management 서비스에서 자동으로 발송되었습니다.
+        </p>
+    </div>
+
+</div>
+</body>
+</html>
