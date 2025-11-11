@@ -50,7 +50,7 @@ public class BudgetService {
     }
 
     /**
-     * 이미 설정한 예산이라면 예외처리.
+     * 이미 설정한 예산이라면 예외처리
      * @param request period
      * @param user 사용자
      * @param category 카테고리
