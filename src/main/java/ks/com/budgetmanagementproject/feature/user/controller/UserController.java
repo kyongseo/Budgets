@@ -73,4 +73,19 @@ public class UserController {
                 .status(BaseResponseStatus.USER_UPDATE_SUCCESS.getStatus())
                 .body(BaseResponse.of(BaseResponseStatus.USER_UPDATE_SUCCESS, updated));
     }
+
+    /**
+     * 로그아웃
+     * @param response 응답
+     */
+    @Operation(summary = "✅ 로그아웃", description = "로그아웃")
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response)
+    {
+        userService.logout(response);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.LOGOUT_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.LOGOUT_SUCCESS));
+    }
 }

@@ -37,7 +37,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // ✅ 정적 리소스 및 chat 페이지는 JWT 검증 제외
         if (path.startsWith("/chat")
                 || path.endsWith(".html")
                 || path.endsWith(".js")
@@ -59,6 +58,9 @@ public class JWTFilter extends OncePerRequestFilter {
 
         try {
             jwtUtil.isExpired(accessToken);
+            setAuthentication(accessToken);
+            filterChain.doFilter(request, response);
+            return;
         } catch (ExpiredJwtException e) {
             String refreshToken = resolveRefreshToken(request);
 
@@ -68,16 +70,14 @@ public class JWTFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // refresh-token 유효성 검증
             try {
-                jwtUtil.isExpired(refreshToken); // 만료 여부 체크
+                jwtUtil.isExpired(refreshToken);
             } catch (ExpiredJwtException ex) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().print("refresh token expired");
                 return;
             }
 
-            // DB 검증
             Optional<RefreshToken> refreshEntity = refreshRepository.findByRefresh(refreshToken);
             if (refreshEntity.isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -85,7 +85,6 @@ public class JWTFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // [4] refresh token이 남아 있으면 → 새로운 access token 생성
             String username = jwtUtil.getUsername(refreshToken);
             List<String> roles = Arrays.stream(jwtUtil.getRole(refreshToken).split(",")).toList();
             Long userId = jwtUtil.getUserId(refreshToken);
@@ -100,8 +99,6 @@ public class JWTFilter extends OncePerRequestFilter {
             newAccessCookie.setMaxAge(Math.toIntExact(JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT / 1000));
             response.addCookie(newAccessCookie);
 
-            // [5] 시큐리티 인증객체 재설정
-            // → 재로그인 없이도 SecurityContext 살아있는 상태로 유지
             setAuthentication(newAccessToken);
             filterChain.doFilter(request, response);
             return;
@@ -142,13 +139,17 @@ public class JWTFilter extends OncePerRequestFilter {
 
     private void setAuthentication(String accessToken) {
         String username = jwtUtil.getUsername(accessToken);
+        Long userId = jwtUtil.getUserId(accessToken);
+
         List<Role> roles = Arrays.stream(jwtUtil.getRole(accessToken).trim().split(","))
                 .map(roleRepository::findByName)
                 .map(opt -> opt.orElseThrow(() -> new RuntimeException("Role not found")))
                 .toList();
 
         User user = User.builder()
+                .id(userId)
                 .username(username)
+                .password("temp")
                 .roles(new HashSet<>(roles))
                 .build();
 
@@ -157,8 +158,6 @@ public class JWTFilter extends OncePerRequestFilter {
         Authentication authToken = new UsernamePasswordAuthenticationToken(
                 customUserDetails, null, customUserDetails.getAuthorities()
         );
-
         SecurityContextHolder.getContext().setAuthentication(authToken);
     }
-
 }
