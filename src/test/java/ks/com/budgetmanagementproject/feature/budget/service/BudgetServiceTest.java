@@ -70,7 +70,10 @@ class BudgetServiceTest {
 
             // then
             then(budgetRepository).should().save(argThat(b ->
-                    false
+                    b.getCategory().equals(food) &&
+                            b.getUser().equals(user) &&
+                            b.getMoney().compareTo(BigDecimal.valueOf(100_000L)) == 0 &&
+                            b.getPeriod().equals(key)
             ));
         }
 
@@ -122,7 +125,7 @@ class BudgetServiceTest {
 
             service.budgetUpdate(1L, req, user);
 
-            assertThat(budget.getMoney()).isEqualTo(150_000L);
+            assertThat(budget.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(150_000L));
         }
 
         @Test
