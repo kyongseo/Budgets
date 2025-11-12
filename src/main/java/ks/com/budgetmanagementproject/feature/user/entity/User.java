@@ -5,6 +5,7 @@ import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.global.common.model.BaseTimeEntity;
 import lombok.*;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,5 +39,12 @@ public class User extends BaseTimeEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    public User(String username, String password, Role role) {
+        this.username = username;
+        this.password = password;
+        this.roles = Collections.singleton(role);
+    }
 }
