@@ -1,6 +1,5 @@
 package ks.com.budgetmanagementproject.feature.user.service;
 
-import jakarta.servlet.http.Cookie;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
@@ -24,11 +23,10 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -75,6 +73,7 @@ class UserServiceTest {
     @Test
     @DisplayName("로그인_성공")
     void loginTestSuccess() {
+
         // given
         LoginReqDto req = new LoginReqDto("test1234@test.com", "1234");
 
