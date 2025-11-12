@@ -17,13 +17,11 @@ public class BudgetCategoryService {
     /**
      * 예산 카테고리 목록 조회
      * 전체 예산 카테고리 목록을 불러와서 BudgetCategoryResponse를 반환한다.
-     * @return response
+     * @return budgetCategoryResponse
      */
     public BudgetCategoryResponse categoryList() {
         List<BudgetCategory> list = categoryRepository.findAll();
 
-        BudgetCategoryResponse response = new BudgetCategoryResponse(list);
-
-        return response;
+        return new BudgetCategoryResponse(list);
     }
 }

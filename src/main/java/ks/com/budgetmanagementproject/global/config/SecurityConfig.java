@@ -44,7 +44,7 @@ public class SecurityConfig {
             "/static/**", "/js/**",
             "/ws-stomp",
             "/ws-stomp/**", "/pub/**", "/sub/**",
-            "/users/**", "/reissue", "/error", "/chat", "/chat/**"
+            "/users/**", "/reissue", "/error", "/chat", "/chat/**", "/rooms/**"
     };
 
     String[] swaggerAllowPage = new  String[] {

@@ -66,7 +66,6 @@ class ExpenditureServiceTest {
 
             given(categoryRepository.findByName("식비")).willReturn(Optional.of(food));
 
-            // Budget.period는 서비스에서 year/month의 1일로 조회됨
             LocalDate start = LocalDate.of(2025, 9, 1);
             Budget budget = Budget.builder()
                     .id(100L)
@@ -83,7 +82,7 @@ class ExpenditureServiceTest {
             service.expenditureCreate(req, user);
 
             // then
-            assertThat(budget.getMoney()).isEqualTo(70_000L);
+            assertThat(budget.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(70_000L));
             then(expenditureRepository).should().save(Mockito.any(Expenditure.class));
         }
 
@@ -142,7 +141,7 @@ class ExpenditureServiceTest {
             service.expenditureUpdate(1L, req, user);
 
             // then
-            assertThat(entity.getMoney()).isEqualTo(50_000L);
+            assertThat(entity.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(50_000L));
             assertThat(entity.getMemo()).isEqualTo("저녁");
             assertThat(entity.getCategory()).isSameAs(food);
             assertThat(entity.getPeriod()).isEqualTo(LocalDate.of(2025, 9, 12));
@@ -191,14 +190,15 @@ class ExpenditureServiceTest {
         @Test
         void 성공_본인소유() {
             Expenditure e = Expenditure.builder().id(1L).user(user)
-                    .memo("메모").period(anyPeriod).category(food).excludingTotal(false).money(BigDecimal.valueOf(12_345L)).build();
+                    .memo("메모").period(anyPeriod).category(food).excludingTotal(false)
+                    .money(BigDecimal.valueOf(12_345L)).build();
             given(expenditureRepository.findById(1L)).willReturn(Optional.of(e));
 
             ExpenditureDetailResponse resp = service.expenditureDetail(1L, user);
 
             assertThat(resp.getMemo()).isEqualTo("메모");
             assertThat(resp.getCategoryName()).isEqualTo("식비");
-            assertThat(resp.getMoney()).isEqualTo(12_345L);
+            assertThat(resp.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(12_345L));
         }
 
         @Test

@@ -1,6 +1,8 @@
 package ks.com.budgetmanagementproject.feature.budget.dto;
 
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,5 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class BudgetRecommendListResponse {
 
-    List<BudgetRecommendResponse> responseList;
+    @NotNull(message = "추천 목록은 필수입니다.")
+    @Valid
+    private List<BudgetRecommendResponse> responseList;
 }

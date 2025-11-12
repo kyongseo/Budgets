@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8" />
-    <title>💬 실시간 채팅</title>
+    <title>💬 Chat </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css" />
     <style>
         body {
@@ -41,6 +41,15 @@
             word-wrap: break-word;
         }
         .sender { font-size: 11px; margin-bottom: 2px; color: #555; }
+
+        /* ✅ 시스템 안내문 스타일 */
+        .system-message {
+            text-align: center;
+            color: #777;
+            font-size: 13px;
+            margin: 6px 0;
+        }
+
         .top-area input { width: 80px; }
         .message-input { width: 75%; padding: 5px; }
     </style>
@@ -53,7 +62,7 @@
 
 <body>
 <div class="chat-container">
-    <h3>💬 Kafka 웹소켓 채팅</h3>
+    <h3>💬 재무 톡 </h3>
     <p><strong>👤 현재 사용자:</strong> <span id="currentUser" th:text="${username}">익명</span></p>
 
     <div class="top-area">
@@ -79,13 +88,21 @@
 
     function appendMessage(sender, message) {
         const box = document.getElementById("messages");
+        const isSystem = sender === "SYSTEM";
         const isYou = sender === username;
 
-        const formatted = `
-        <div class="msg ${isYou ? 'you' : 'other'}">
-          <div class="sender">${sender}</div>
-          <div class="bubble">${message}</div>
-        </div>`;
+        let formatted;
+        if (isSystem) {
+            // ✅ 시스템 안내문은 말풍선 대신 중앙 회색 안내문으로 표시
+            formatted = `<div class="system-message">🛈 ${message}</div>`;
+        } else {
+            formatted = `
+                <div class="msg ${isYou ? 'you' : 'other'}">
+                    <div class="sender">${sender}</div>
+                    <div class="bubble">${message}</div>
+                </div>`;
+        }
+
         box.innerHTML += formatted;
         box.scrollTop = box.scrollHeight;
     }
@@ -136,8 +153,6 @@
 
         console.log("📤 메시지 전송:", payload);
         socket.send(JSON.stringify(payload));
-
-        // ❌ 여기서는 appendMessage 하지 않음 (Kafka를 거쳐서 다시 받음)
         document.getElementById("messageInput").value = "";
     }
 
@@ -146,7 +161,7 @@
             socket.close();
             socket = null;
         }
-        document.getElementById("messages").innerHTML = "";
+        appendMessage("SYSTEM", "연결이 해제되었습니다.");
         console.log("연결 해제 완료");
     }
 </script>

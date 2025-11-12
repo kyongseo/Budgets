@@ -1,6 +1,6 @@
 package ks.com.budgetmanagementproject.global.config;
 
-import ks.com.budgetmanagementproject.feature.chat.dto.ChatMessage;
+import ks.com.budgetmanagementproject.feature.chat.entity.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -30,7 +30,5 @@ public class KafkaChatConsumer {
         } catch (Exception e) {
             log.error("❌ 브로드캐스트 실패", e);
         }
-
-        log.info("🎧 ==================== Kafka CONSUME 종료 ====================");
     }
 }
