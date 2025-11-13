@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class JWTFilter extends OncePerRequestFilter {
+public class  JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
     private final RoleRepository roleRepository;
