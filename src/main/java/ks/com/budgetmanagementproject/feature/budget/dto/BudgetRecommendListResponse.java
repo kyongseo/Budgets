@@ -17,4 +17,8 @@ public class BudgetRecommendListResponse {
     @NotNull(message = "추천 목록은 필수입니다.")
     @Valid
     private List<BudgetRecommendResponse> responseList;
+
+    public static BudgetRecommendListResponse from(List<BudgetRecommendResponse> list) {
+        return new BudgetRecommendListResponse(list);
+    }
 }
