@@ -31,4 +31,21 @@ public class ChatRoom extends BaseTimeEntity {
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<ChatRoomMember> members = new HashSet<>();
+
+    public void addMember(ChatRoomMember member) {
+        this.members.add(member);
+    }
+
+    public void removeMember(ChatRoomMember member) {
+        this.members.remove(member);
+    }
+
+    public int getMemberCount() {
+        return this.members.size();
+    }
+
+    public boolean hasMember(Long userId) {
+        return this.members.stream()
+                .anyMatch(member -> member.getUserId().equals(userId));
+    }
 }
