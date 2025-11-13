@@ -27,7 +27,7 @@ public class BudgetController {
     @PostMapping
     public ResponseEntity<?> budgetSetting_endpoint(@Validated @RequestBody BudgetSettingRequest request,
                                                     @AuthenticationPrincipal User user) {
-        budgetService.budgetSetting(request, user);
+        budgetService.budgetCreated(request, user);
 
         return ResponseEntity
                 .status(BaseResponseStatus.BUDGET_CREATE_SUCCESS.getStatus())
@@ -69,7 +69,7 @@ public class BudgetController {
 
     @Operation(summary = "✅ 예산 추천", description = "예산 추천")
     @GetMapping("/recommend")
-    public ResponseEntity<?> budgetRecommend(@RequestParam long totalAmount) {
+    public ResponseEntity<?> budgetRecommend(@RequestParam Long totalAmount) {
         BudgetRecommendListResponse response = budgetService.budgetRecommend(totalAmount);
 
         return ResponseEntity
