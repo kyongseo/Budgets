@@ -1,9 +1,6 @@
 package ks.com.budgetmanagementproject.feature.budget.service;
 
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendListResponse;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendResponse;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
+import ks.com.budgetmanagementproject.feature.budget.dto.*;
 import ks.com.budgetmanagementproject.feature.budget.entity.Budget;
 import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetCategoryRepository;
@@ -31,28 +28,36 @@ public class BudgetService {
     /**
      * 예산 설정
      * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외 처리
+     *
      * @param request money, categoryName, period
-     * @param user 사용자
+     * @param user    사용자
      */
     @Transactional
-    public void budgetSetting(BudgetSettingRequest request, User user) {
+    public BudgetSettingResponse budgetCreated(BudgetSettingRequest request, User user) {
         BudgetCategory category = categoryRepository.findByName(request.getCategoryName())
                 .orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
         existsByBudget(request, user, category);
-        LocalDate date = LocalDate.of(request.getPeriod().getYear(), request.getPeriod().getMonth(), 1);
+        LocalDate date = LocalDate.of(
+                request.getPeriod().getYear(),
+                request.getPeriod().getMonth(),
+                1
+        );
         Budget budget = Budget.builder()
                 .category(category)
                 .money(request.getMoney())
                 .period(date)
                 .user(user)
                 .build();
-        budgetRepository.save(budget);
+        Budget savedBudget = budgetRepository.save(budget);
+
+        return BudgetSettingResponse.from(savedBudget);
     }
 
     /**
      * 이미 설정한 예산이라면 예외처리
-     * @param request period
-     * @param user 사용자
+     *
+     * @param request  period
+     * @param user     사용자
      * @param category 카테고리
      */
     private void existsByBudget(BudgetSettingRequest request, User user, BudgetCategory category) {
@@ -68,22 +73,26 @@ public class BudgetService {
      * 예산 수정
      * budgetId, money, user를 받아서 예산을 수정한다.
      * 만약 없는 budgetId가 들어오면 예외 발생, 수정할 예산의 유저와 다를경우 예외 발생
+     *
      * @param budgetId 예산 아이디
-     * @param request : money
-     * @param user 사용자
+     * @param request  : money
+     * @param user     사용자
      */
     @Transactional
-    public void budgetUpdate(Long budgetId, BudgetUpdateRequest request, User user) {
+    public BudgetUpdateResponse budgetUpdate(Long budgetId, BudgetUpdateRequest request, User user) {
         Budget budget = budgetRepository.findById(budgetId)
                 .orElseThrow(() -> new BaseException(NON_EXISTENT_BUDGET));
         if (!budget.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
         }
         budget.updateBudget(request.getMoney());
+
+        return BudgetUpdateResponse.from(budget);
     }
 
     /**
      * 예산 Soft 삭제
+     *
      * @param userId 사용자 아이디
      */
     public void budgetSoftDelete(Long userId) {
@@ -110,9 +119,9 @@ public class BudgetService {
      * @return list
      */
     @Transactional(readOnly = true)
-    public BudgetRecommendListResponse budgetRecommend(long totalAmount) {
+    public BudgetRecommendListResponse budgetRecommend(Long totalAmount) {
         List<BudgetRecommendResponse> responseList = budgetRepository.findByAverage(totalAmount);
 
-        return new BudgetRecommendListResponse(responseList);
+        return BudgetRecommendListResponse.from(responseList);
     }
 }
