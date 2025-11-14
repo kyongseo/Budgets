@@ -4,6 +4,7 @@ package ks.com.budgetmanagementproject.feature.budget.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.global.common.model.BaseTimeEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +21,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Table(name = "budgets")
-public class Budget {
+public class Budget extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
