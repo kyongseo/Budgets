@@ -6,16 +6,15 @@ import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
 import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
-import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.UserEditDto;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginResponse;
+import ks.com.budgetmanagementproject.feature.user.dto.SignUpRequest;
+import ks.com.budgetmanagementproject.feature.user.dto.UpdateRequest;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
-import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -63,7 +61,7 @@ class UserServiceTest {
     void signUpTestSuccess() {
 
         // given
-        SignUpReqDto req = new SignUpReqDto("test1234@test.com", "1234");
+        SignUpRequest req = new SignUpRequest("test1234@test.com", "1234");
         given(userRepository.existsByUsername(req.getUsername())).willReturn(false);
 
         Role role = new Role(1L, "USER", new HashSet<>());
@@ -78,13 +76,12 @@ class UserServiceTest {
         verify(userRepository).save(any(User.class));
     }
 
-
     @Test
     @DisplayName("로그인_성공")
     void loginTestSuccess() {
 
         // given
-        LoginReqDto req = new LoginReqDto("test1234@test.com", "1234");
+        LoginRequest req = new LoginRequest("test1234@test.com", "1234");
 
         User user = new User();
         user.setId(100L);
@@ -109,7 +106,7 @@ class UserServiceTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         // when
-        LoginResDto res = userService.login(req, response);
+        LoginResponse res = userService.login(req, response);
 
         // then
         assertNotNull(res);
@@ -134,7 +131,6 @@ class UserServiceTest {
         verify(refreshRepository).save(any(RefreshToken.class));
         verifyNoMoreInteractions(userRepository, passwordEncoder, jwtUtil, refreshRepository);
     }
-
 
     @Test
     @DisplayName("AccessToken_재발급_성공")
@@ -217,7 +213,7 @@ class UserServiceTest {
     void updateUserSuccess() {
 
         // given
-        UserEditDto editDto = new UserEditDto("newNickname", "010-1234-5678");
+        UpdateRequest request = new UpdateRequest("newNickname", "010-1234-5678");
 
         User user = new User();
         user.setId(1L);
@@ -225,29 +221,17 @@ class UserServiceTest {
         user.setNickname("oldNickname");
         user.setPhoneNumber("010-0000-0000");
 
-        CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
-        given(customUserDetails.getUsername()).willReturn("test@test.com");
-
-        Authentication authentication = mock(Authentication.class);
-        given(authentication.getPrincipal()).willReturn(customUserDetails);
-
-        given(userRepository.findByUsername("test@test.com"))
+        given(userRepository.findById(1L))
                 .willReturn(Optional.of(user));
-        given(userRepository.save(any(User.class)))
-                .willAnswer(inv -> inv.getArgument(0));
 
         // when
-        User updatedUser = userService.updateUser(authentication, editDto);
+        userService.updateUser(user, request);
 
         // then
-        assertNotNull(updatedUser);
-        assertEquals("newNickname", updatedUser.getNickname());
-        assertEquals("010-1234-5678", updatedUser.getPhoneNumber());
-        assertEquals("test@test.com", updatedUser.getUsername());
+        assertEquals("newNickname", user.getNickname());
+        assertEquals("010-1234-5678", user.getPhoneNumber());
 
-        verify(userRepository).findByUsername("test@test.com");
-        verify(userRepository).save(user);
-        verifyNoMoreInteractions(userRepository);
+        verify(userRepository).findById(1L);
     }
 
     @Test
@@ -255,42 +239,20 @@ class UserServiceTest {
     void updateUserFailUserNotFound() {
 
         // given
-        UserEditDto editDto = new UserEditDto("newNickname", "010-1234-5678");
+        UpdateRequest request = new UpdateRequest("newNickname", "010-1234-5678");
 
-        CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
-        given(customUserDetails.getUsername()).willReturn("notexist@test.com");
+        User user = new User();
+        user.setId(999L);
 
-        Authentication authentication = mock(Authentication.class);
-        given(authentication.getPrincipal()).willReturn(customUserDetails);
-
-        given(userRepository.findByUsername("notexist@test.com"))
+        given(userRepository.findById(999L))
                 .willReturn(Optional.empty());
 
         // when & then
         BaseException exception = assertThrows(BaseException.class,
-                () -> userService.updateUser(authentication, editDto));
+                () -> userService.updateUser(user, request));
 
         assertEquals(BaseExceptionStatus.NON_EXISTENT_USER, exception.getStatus());
-        verify(userRepository).findByUsername("notexist@test.com");
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("사용자_정보_업데이트_실패_잘못된_Principal")
-    void updateUserFailInvalidPrincipal() {
-
-        // given
-        UserEditDto editDto = new UserEditDto("newNickname", "010-1234-5678");
-
-        Authentication authentication = mock(Authentication.class);
-        given(authentication.getPrincipal()).willReturn("InvalidPrincipal"); // String 타입
-
-        // when & then
-        BaseException exception = assertThrows(BaseException.class,
-                () -> userService.updateUser(authentication, editDto));
-
-        assertEquals(BaseExceptionStatus.NON_EXISTENT_USER, exception.getStatus());
-        verifyNoInteractions(userRepository);
+        verify(userRepository).findById(999L);
     }
 
     @Test

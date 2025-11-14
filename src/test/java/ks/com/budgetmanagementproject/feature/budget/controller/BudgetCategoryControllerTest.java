@@ -41,9 +41,9 @@ class BudgetCategoryControllerTest {
             // given
             BudgetCategory food = BudgetCategory.builder().id(1L).name("식비").build();
             BudgetCategory trans = BudgetCategory.builder().id(2L).name("교통").build();
-            BudgetCategoryResponse response = new BudgetCategoryResponse(List.of(food, trans));
+            BudgetCategoryResponse response = new BudgetCategoryResponse();
 
-            given(categoryService.categoryList()).willReturn(response);
+            given(categoryService.categoryList()).willReturn((List<BudgetCategoryResponse>) response);
 
             // when & then
             mockMvc.perform(get("/budget/categories"))
@@ -64,9 +64,9 @@ class BudgetCategoryControllerTest {
         @DisplayName("카테고리_목록_조회_성공_빈_리스트")
         void categoryListSuccessEmpty() throws Exception {
             // given
-            BudgetCategoryResponse response = new BudgetCategoryResponse(List.of());
+            BudgetCategoryResponse response = new BudgetCategoryResponse();
 
-            given(categoryService.categoryList()).willReturn(response);
+            given(categoryService.categoryList()).willReturn((List<BudgetCategoryResponse>) response);
 
             // when & then
             mockMvc.perform(get("/budget/categories"))

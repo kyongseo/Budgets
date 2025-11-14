@@ -58,7 +58,7 @@ class BudgetControllerTest {
                     .period(YearMonth.of(2025, 9))
                     .build();
 
-            doNothing().when(budgetService).budgetCreated(any(BudgetSettingRequest.class), any());
+            doNothing().when(budgetService).createBudget(any(BudgetSettingRequest.class), any());
 
             // when & then
             mockMvc.perform(post("/budgets")
@@ -69,7 +69,7 @@ class BudgetControllerTest {
                     .andExpect(jsonPath("$.code").value(201))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(budgetService).budgetCreated(any(BudgetSettingRequest.class), any());
+            verify(budgetService).createBudget(any(BudgetSettingRequest.class), any());
         }
 
         @Test
@@ -88,7 +88,7 @@ class BudgetControllerTest {
                     .andDo(print())
                     .andExpect(status().isBadRequest());
 
-            verify(budgetService, never()).budgetCreated(any(), any());
+            verify(budgetService, never()).createBudget(any(), any());
         }
     }
 

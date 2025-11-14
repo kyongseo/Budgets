@@ -66,7 +66,7 @@ class BudgetServiceTest {
             given(budgetRepository.findByCategoryAndPeriodAndUser(food, key, user)).willReturn(null);
 
             // when
-            service.budgetCreated(req, user);
+            service.createBudget(req, user);
 
             // then
             then(budgetRepository).should().save(argThat(b ->
@@ -87,7 +87,7 @@ class BudgetServiceTest {
                     .build();
             given(categoryRepository.findByName("없는카테고리")).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.budgetCreated(req, user))
+            assertThatThrownBy(() -> service.createBudget(req, user))
                     .isInstanceOf(BaseException.class);
         }
 
@@ -103,7 +103,7 @@ class BudgetServiceTest {
             Budget exists = Budget.builder().id(100L).category(food).user(user).money(BigDecimal.valueOf(10_000L)).period(key).build();
             given(budgetRepository.findByCategoryAndPeriodAndUser(food, key, user)).willReturn(exists);
 
-            assertThatThrownBy(() -> service.budgetCreated(req, user))
+            assertThatThrownBy(() -> service.createBudget(req, user))
                     .isInstanceOf(BaseException.class);
         }
     }
