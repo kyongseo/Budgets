@@ -6,15 +6,10 @@ import ks.com.budgetmanagementproject.feature.chat.dto.ChatRoomResponse;
 import ks.com.budgetmanagementproject.feature.chat.dto.CreateRoomRequest;
 import ks.com.budgetmanagementproject.feature.chat.service.ChatRoomService;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
-import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
-import ks.com.budgetmanagementproject.global.common.logger.BaseException;
-import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
-import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -30,12 +25,12 @@ import java.util.List;
 public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
-    private final UserRepository userRepository;
 
     @PostMapping
     @Operation(summary = "✅ 채팅방 생성", description = "로그인한 사용자가 채팅방 생성")
-    public ResponseEntity<?> createRoom(@Validated @RequestBody CreateRoomRequest request,
-                                        @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> createRoom_endpoint(
+            @Validated @RequestBody CreateRoomRequest request,
+            @AuthenticationPrincipal User user) {
 
         chatRoomService.createRoom(request, user);
 
@@ -46,7 +41,7 @@ public class ChatRoomController {
 
     @GetMapping
     @Operation(summary = "✅ 채팅방 목록 조회", description = "모든 채팅방 목록 조회")
-    public ResponseEntity<?> getRoomList() {
+    public ResponseEntity<?> getRoomList_endpoint() {
 
         List<ChatRoomResponse> response = chatRoomService.getAllRooms();
 
@@ -57,7 +52,7 @@ public class ChatRoomController {
 
     @GetMapping("/{roomId}")
     @Operation(summary = "✅ 채팅방 상세 조회", description = "채팅방 상세 정보 및 멤버 목록 조회")
-    public ResponseEntity<?> getRoomDetail(@PathVariable Long roomId) {
+    public ResponseEntity<?> getRoomDetail_endpoint(@PathVariable Long roomId) {
 
         ChatRoomResponse response = chatRoomService.getRoomById(roomId);
 
@@ -68,16 +63,9 @@ public class ChatRoomController {
 
     @PostMapping("/{roomId}/join")
     @Operation(summary = "✅ 채팅방 입장", description = "채팅방에 입장")
-    public ResponseEntity<?> joinRoom(
+    public ResponseEntity<?> joinRoom_endpoint(
             @PathVariable Long roomId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(BaseResponse.of(BaseResponseStatus.SUCCESS));
-        }
-        User user = userRepository.findById(userDetails.getUserId())
-                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
+            @AuthenticationPrincipal User user) {
 
         chatRoomService.joinChatRoom(roomId, user);
 
@@ -88,16 +76,9 @@ public class ChatRoomController {
 
     @DeleteMapping("/{roomId}/leave")
     @Operation(summary = "✅ 채팅방 퇴장", description = "채팅방에서 나가기")
-    public ResponseEntity<?> leaveRoom(
+    public ResponseEntity<?> leaveRoom_endpoint(
             @PathVariable Long roomId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(BaseResponse.of(BaseResponseStatus.SUCCESS));
-        }
-        User user = userRepository.findById(userDetails.getUserId())
-                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
+            @AuthenticationPrincipal User user) {
 
         chatRoomService.leaveRoom(roomId, user);
 

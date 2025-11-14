@@ -103,16 +103,13 @@ public class ExpenditureService {
 
         List<ExpenditureList> expenditureList =
                 expenditureRepository.findExpenditureList(minPeriod, maxPeriod, category, user, minMoney, maxMoney);
-
         Long viewMoneyTotal =
                 expenditureRepository.findViewMoneyTotal(minPeriod, maxPeriod, category, user, minMoney, maxMoney);
-
         Long totalCategoryMoneyTotal =
                 expenditureRepository.findTotalByCategory(category, user);
 
         return ExpenditureListResponse.of(expenditureList, viewMoneyTotal, totalCategoryMoneyTotal);
     }
-
 
     /**
      * 지출 상세 조회

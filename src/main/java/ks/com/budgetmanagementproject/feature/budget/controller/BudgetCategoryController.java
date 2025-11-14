@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/budget/categories")
@@ -20,10 +22,11 @@ public class BudgetCategoryController {
 
     private final BudgetCategoryService categoryService;
 
-    @Operation(summary = "✅ 예산 카테고리 목록 조회", description = "예산 카테고리 목록 조회")
     @GetMapping
+    @Operation(summary = "✅ 예산 카테고리 목록 조회", description = "예산 카테고리 목록 조회")
     public ResponseEntity<?> categoryList() {
-        BudgetCategoryResponse response = categoryService.categoryList();
+
+        List<BudgetCategoryResponse> response = categoryService.categoryList();
 
         return ResponseEntity
                 .status(BaseResponseStatus.BUDGET_CATEGORY_LIST_SUCCESS.getStatus())

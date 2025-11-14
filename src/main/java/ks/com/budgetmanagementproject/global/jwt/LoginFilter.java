@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
 import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,7 +39,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            LoginReqDto loginDTO = objectMapper.readValue(request.getInputStream(), LoginReqDto.class);
+            LoginRequest loginDTO = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
             return authenticationManager.authenticate(authToken);

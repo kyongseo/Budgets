@@ -6,10 +6,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
-import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.UserEditDto;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginResponse;
+import ks.com.budgetmanagementproject.feature.user.dto.SignUpRequest;
+import ks.com.budgetmanagementproject.feature.user.dto.UpdateRequest;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.service.UserService;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
@@ -17,7 +17,7 @@ import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,9 +34,9 @@ public class UserController {
 
     @Operation(summary = "✅ 회원가입", description = "회원가입")
     @PostMapping("/signup")
-    public ResponseEntity<?> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
+    public ResponseEntity<?> signUp(@Validated @RequestBody SignUpRequest request) {
 
-        userService.signUp(signUpReqDto);
+        userService.signUp(request);
 
         return ResponseEntity
                 .status(BaseResponseStatus.SIGN_UP_SUCCESS.getStatus())
@@ -45,39 +45,43 @@ public class UserController {
 
     @Operation(summary = "✅ 로그인", description = "로그인")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, HttpServletResponse response) {
+    public ResponseEntity<?> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response) {
 
-        LoginResDto loginResDto = userService.login(loginReqDto, response);
+        LoginResponse loginResponse = userService.login(request, response);
 
         return ResponseEntity
                 .status(BaseResponseStatus.LOGIN_SUCCESS.getStatus())
-                .body(BaseResponse.of(BaseResponseStatus.LOGIN_SUCCESS, loginResDto));
+                .body(BaseResponse.of(BaseResponseStatus.LOGIN_SUCCESS, loginResponse));
     }
 
     @Operation(summary = "✅ AccessToken 재발급", description = "AccessToken 재발급")
     @PostMapping("/refresh")
-    public ResponseEntity<?> reissueToken(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> reissueToken(
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
-        String newToken = userService.reissueToken(request, response);
+        String newLoginResponse = userService.reissueToken(request, response);
+
         return ResponseEntity
                 .status(BaseResponseStatus.ACCESS_TOKEN_REISSUE_SUCCESS.getStatus())
-                .body(BaseResponse.of(BaseResponseStatus.ACCESS_TOKEN_REISSUE_SUCCESS, newToken));
+                .body(BaseResponse.of(BaseResponseStatus.ACCESS_TOKEN_REISSUE_SUCCESS, newLoginResponse));
     }
 
-    @Operation( summary = "✅ 사용자 정보 변경", description = "사용자 정보 변경")
+    @Operation(summary = "✅ 사용자 정보 변경", description = "사용자 정보 변경")
     @PatchMapping()
-    public ResponseEntity<?> getUpdateUser(Authentication authentication, @RequestBody UserEditDto userEditDto) {
+    public ResponseEntity<?> getUpdateUser(
+            @AuthenticationPrincipal User user,
+            @Validated @RequestBody UpdateRequest request) {
 
-        User updated = userService.updateUser(authentication, userEditDto);
+        userService.updateUser(user, request);
+
         return ResponseEntity
                 .status(BaseResponseStatus.USER_UPDATE_SUCCESS.getStatus())
-                .body(BaseResponse.of(BaseResponseStatus.USER_UPDATE_SUCCESS, updated));
+                .body(BaseResponse.of(BaseResponseStatus.USER_UPDATE_SUCCESS));
     }
 
-    /**
-     * 로그아웃
-     * @param response 응답
-     */
     @Operation(summary = "✅ 로그아웃", description = "로그아웃")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response)

@@ -4,23 +4,18 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
 import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
-import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.UserEditDto;
+import ks.com.budgetmanagementproject.feature.user.dto.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
+import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
-import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus.*;
 
 @Slf4j
 @Service
@@ -43,28 +36,23 @@ public class UserService {
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
 
-    @Transactional
-    public boolean isExistsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
-
     /**
      * 회원가입
-     * @param signUpReqDto : 이메일, 비밀번호
+     * @param request : 이메일, 비밀번호
      */
     @Transactional
-    public void signUp(@Valid SignUpReqDto signUpReqDto) {
+    public void signUp(SignUpRequest request) {
 
-        if (isExistsByUsername(signUpReqDto.getUsername())) {
-            throw new BaseException(DUPLICATE_EMAIL);
+        if (isExistsByUsername(request.getUsername())) {
+            throw new BaseException(BaseExceptionStatus.DUPLICATE_EMAIL);
         }
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new BaseException(FORBIDDEN_USER));
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.FORBIDDEN_USER));
 
         User user = User.builder()
-                .username(signUpReqDto.getUsername())
-                .password(passwordEncoder.encode(signUpReqDto.getPassword()))
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(userRole))
                 .build();
 
@@ -73,17 +61,17 @@ public class UserService {
 
     /**
      * 로그인
-     * @param userLoginDto 이메일, 비밀번호
+     * @param request 이메일, 비밀번호
      * @param response 응답
      * @return 토큰
      */
-    public LoginResDto login(LoginReqDto userLoginDto, HttpServletResponse response) {
+    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
 
-        User user = userRepository.findByUsername(userLoginDto.getUsername())
-                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
 
-        if (!passwordEncoder.matches(userLoginDto.getPassword(), user.getPassword())) {
-            throw new BaseException(LOGIN_USER_NOT_EXIST);
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BaseException(BaseExceptionStatus.LOGIN_USER_NOT_EXIST);
         }
 
         List<String> roles = user.getRoles().stream()
@@ -115,7 +103,7 @@ public class UserService {
         response.addCookie(refreshTokenCookie);
         response.setHeader("accessToken", accessToken);
 
-        return LoginResDto.builder()
+        return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .userId(user.getId())
@@ -133,13 +121,13 @@ public class UserService {
 
         String refreshToken = resolveRefreshToken(request);
         if (refreshToken == null) {
-            throw new BaseException(NON_EXISTENT_TOKEN);
+            throw new BaseException(BaseExceptionStatus.NON_EXISTENT_TOKEN);
         }
 
         try {
             jwtUtil.isExpired(refreshToken);
         } catch (ExpiredJwtException e) {
-            throw new BaseException(NON_EXISTENT_TOKEN);
+            throw new BaseException(BaseExceptionStatus.NON_EXISTENT_TOKEN);
         }
 
         String username = jwtUtil.getUsername(refreshToken);
@@ -160,22 +148,16 @@ public class UserService {
 
     /**
      * 사용자 정보 업데이트
-     * @param authentication 인증정보
-     * @param userEditDto nickname, phoneNumber
-     * @return 저장
+     * @param request nickname, phoneNumber
      */
     @Transactional
-    public User updateUser(Authentication authentication, UserEditDto userEditDto) {
-        if (!(authentication.getPrincipal() instanceof CustomUserDetails customUser))
-            throw new BaseException(NON_EXISTENT_USER);
+    public void updateUser(User user, UpdateRequest request) {
+        User persistedUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
 
-        User user = userRepository.findByUsername(customUser.getUsername())
-                .orElseThrow(() -> new BaseException(NON_EXISTENT_USER));
+        persistedUser.updateUserInfo(request.getNickname(), request.getPhoneNumber());
 
-        user.setNickname(userEditDto.getNickname());
-        user.setPhoneNumber(userEditDto.getPhoneNumber());
-
-        return userRepository.save(user);
+        UpdateResponse.from(user);
     }
 
     /**
@@ -197,8 +179,11 @@ public class UserService {
         }
         if (refreshToken != null) {
             deleteCookie(response, "refreshToken");
-            // refreshTokenRepository.deleteByToken(refreshToken);
         }
+    }
+
+    private boolean isExistsByUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 
     private String resolveRefreshToken(HttpServletRequest request) {

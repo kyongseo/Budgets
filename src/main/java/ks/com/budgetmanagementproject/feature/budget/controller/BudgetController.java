@@ -25,21 +25,24 @@ public class BudgetController {
 
     @Operation(summary = "✅ 예산 설정", description = "예산 설정")
     @PostMapping
-    public ResponseEntity<?> budgetSetting_endpoint(@Validated @RequestBody BudgetSettingRequest request,
-                                                    @AuthenticationPrincipal User user) {
-        budgetService.budgetCreated(request, user);
+    public ResponseEntity<?> budgetSetting_endpoint(
+            @Validated @RequestBody BudgetSettingRequest request,
+            @AuthenticationPrincipal User user) {
+
+        budgetService.createBudget(request, user);
 
         return ResponseEntity
                 .status(BaseResponseStatus.BUDGET_CREATE_SUCCESS.getStatus())
                 .body(BaseResponse.of(BaseResponseStatus.BUDGET_CREATE_SUCCESS));
     }
 
-
     @Operation(summary = "✅ 예산 수정", description = "예산 수정")
     @PatchMapping("/{budgetId}")
-    public ResponseEntity<?> budgetUpdate_endpoint(@PathVariable Long budgetId,
-                                                   @Validated @RequestBody BudgetUpdateRequest request,
-                                                   @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> budgetUpdate_endpoint(
+            @PathVariable Long budgetId,
+            @Validated @RequestBody BudgetUpdateRequest request,
+            @AuthenticationPrincipal User user) {
+
         budgetService.budgetUpdate(budgetId, request, user);
 
         return ResponseEntity
