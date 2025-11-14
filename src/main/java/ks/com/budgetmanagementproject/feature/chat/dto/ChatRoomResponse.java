@@ -17,7 +17,6 @@ public class ChatRoomResponse {
     private String creatorName;
     private Integer memberCount;
 
-
     public static ChatRoomResponse from(ChatRoom chatRoom) {
         return ChatRoomResponse.builder()
                 .id(chatRoom.getId())
