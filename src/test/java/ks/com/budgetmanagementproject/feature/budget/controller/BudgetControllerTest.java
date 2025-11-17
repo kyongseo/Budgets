@@ -1,11 +1,7 @@
 package ks.com.budgetmanagementproject.feature.budget.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendListResponse;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendResponse;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
-import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
+import ks.com.budgetmanagementproject.feature.budget.dto.*;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -174,9 +170,19 @@ class BudgetControllerTest {
         void budgetRecommendSuccess() throws Exception {
             // given
             long totalAmount = 1_000_000L;
-            BudgetCategory food = BudgetCategory.builder().id(1L).name("식비").build();
-            BudgetRecommendResponse recommendResponse = new BudgetRecommendResponse(food, 300_000L);
-            BudgetRecommendListResponse response = new BudgetRecommendListResponse(List.of(recommendResponse));
+            BudgetCategoryResponse foodCategoryResponse = BudgetCategoryResponse.builder()
+                    .id(1L)
+                    .name("식비")
+                    .build();
+
+            BudgetRecommendResponse recommendResponse = BudgetRecommendResponse.builder()
+                    .category(foodCategoryResponse)
+                    .average(300_000L)
+                    .build();
+
+            BudgetRecommendListResponse response = new BudgetRecommendListResponse(
+                    List.of(recommendResponse)
+            );
 
             given(budgetService.budgetRecommend(totalAmount)).willReturn(response);
 

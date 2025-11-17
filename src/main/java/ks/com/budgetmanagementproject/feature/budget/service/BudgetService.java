@@ -6,15 +6,20 @@ import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetCategoryRepository;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
-import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +27,9 @@ public class BudgetService {
 
     private final BudgetRepository budgetRepository;
     private final BudgetCategoryRepository categoryRepository;
-    private final UserRepository userRepository;
 
     /**
      * 예산 설정
-     * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외 처리
      * @param request money, categoryName, period
      * @param user    사용자
      */
@@ -36,32 +39,29 @@ public class BudgetService {
         BudgetCategory budgets = categoryRepository.findByName(request.getCategoryName())
                 .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_CATEGORY));
 
-        LocalDate date = LocalDate.of(
-                request.getPeriod().getYear(),
-                request.getPeriod().getMonth(),
-                1
-        );
+//        Budget existingBudget = budgetRepository.findByCategoryAndPeriodAndUser(
+//                budgets, LocalDate.from(request.getPeriod()), user);
 
-        Budget exists = budgetRepository.findByCategoryAndPeriodAndUser(budgets, date, user);
-        if (exists != null) {
-            throw new BaseException(BaseExceptionStatus.DUPLICATE_BUDGET);
-        }
+        LocalDate period = request.getPeriod().atDay(1);
+
+        Budget existingBudget = budgetRepository.findByCategoryAndPeriodAndUser(
+                budgets, period, user);
 
         Budget budget = Budget.builder()
                 .category(budgets)
                 .money(request.getMoney())
-                .period(date)
+                .period(period)
                 .user(user)
                 .build();
-        Budget savedBudget = budgetRepository.save(budget);
 
-        BudgetSettingResponse.from(savedBudget);
+        if (existingBudget != null) {
+            throw new BaseException(BaseExceptionStatus.DUPLICATE_BUDGET);
+        }
+        budgetRepository.save(budget);
     }
 
     /**
      * 예산 수정
-     * budgetId, money, user를 받아서 예산을 수정한다.
-     * 만약 없는 budgetId가 들어오면 예외 발생, 수정할 예산의 유저와 다를경우 예외 발생
      * @param budgetId 예산 아이디
      * @param request  : money
      * @param user     사용자
@@ -107,14 +107,54 @@ public class BudgetService {
 
     /**
      * 예산 추천
-     * totalAmount를 기존 이용중인 유저들이 설정한 평균값으로 카테고리별로 적정 금액을 나눠서 반환한다.
-     * @param totalAmount 평균값
      * @return list
      */
     @Transactional(readOnly = true)
     public BudgetRecommendListResponse budgetRecommend(Long totalAmount) {
+        // 1. 모든 예산 데이터 조회 (카테고리 정보 포함) - N+1 방지
+        List<Budget> allBudgets = budgetRepository.findAllWithCategory();
 
-        List<BudgetRecommendResponse> responseList = budgetRepository.findByAverage(totalAmount);
+        // 2. 예산 데이터가 없는 경우 빈 리스트 반환
+        if (allBudgets.isEmpty()) {
+            return BudgetRecommendListResponse.from(Collections.emptyList());
+        }
+
+        // 3. 전체 예산 합계 계산
+        BigDecimal totalBudgetSum = allBudgets.stream()
+                .map(Budget::getMoney)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 4. 카테고리별로 그룹화하고 합계 계산
+        Map<BudgetCategory, BigDecimal> categorySum = allBudgets.stream()
+                .collect(Collectors.groupingBy(
+                        Budget::getCategory,
+                        Collectors.reducing(
+                                BigDecimal.ZERO,
+                                Budget::getMoney,
+                                BigDecimal::add
+                        )
+                ));
+
+        // 5. 카테고리별 추천 금액 계산
+        List<BudgetRecommendResponse> responseList = categorySum.entrySet().stream()
+                .map(entry -> {
+                    BudgetCategory category = entry.getKey();
+                    BigDecimal categoryMoney = entry.getValue();
+
+                    // 비율 계산: (카테고리 금액 / 전체 금액) * 사용자 총 예산
+                    BigDecimal ratio = categoryMoney.divide(totalBudgetSum, 10, RoundingMode.HALF_UP);
+                    long recommendedAmount = BigDecimal.valueOf(totalAmount)
+                            .multiply(ratio)
+                            .setScale(0, RoundingMode.HALF_UP)
+                            .longValue();
+
+                    return BudgetRecommendResponse.builder()
+                            .category(BudgetCategoryResponse.from(category))
+                            .average(recommendedAmount)
+                            .build();
+                })
+                .sorted(Comparator.comparing(r -> r.getCategory().getId())) // ID 순으로 정렬
+                .toList();
 
         return BudgetRecommendListResponse.from(responseList);
     }

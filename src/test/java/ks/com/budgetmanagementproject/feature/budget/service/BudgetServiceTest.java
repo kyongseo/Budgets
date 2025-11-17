@@ -10,7 +10,9 @@ import ks.com.budgetmanagementproject.feature.budget.repository.BudgetCategoryRe
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.feature.user.service.UserService;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
+import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,14 +43,16 @@ class BudgetServiceTest {
     BudgetCategoryRepository categoryRepository;
     @Mock
     UserRepository userRepository;
-
     @InjectMocks
-    BudgetService service;
+    BudgetService budgetService;
+    @InjectMocks
+    UserService userService;
 
-    // fixtures
     private final User user = User.builder().id(1L).build();
     private final User other = User.builder().id(2L).build();
     private final BudgetCategory food = BudgetCategory.builder().id(10L).name("식비").build();
+    private final BudgetCategory transport = BudgetCategory.builder().id(3L).name("교통비").build();
+
 
     @Nested
     @DisplayName("budgetSetting")
@@ -66,7 +71,7 @@ class BudgetServiceTest {
             given(budgetRepository.findByCategoryAndPeriodAndUser(food, key, user)).willReturn(null);
 
             // when
-            service.createBudget(req, user);
+            budgetService.createBudget(req, user);
 
             // then
             then(budgetRepository).should().save(argThat(b ->
@@ -87,7 +92,7 @@ class BudgetServiceTest {
                     .build();
             given(categoryRepository.findByName("없는카테고리")).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.createBudget(req, user))
+            assertThatThrownBy(() -> budgetService.createBudget(req, user))
                     .isInstanceOf(BaseException.class);
         }
 
@@ -103,8 +108,9 @@ class BudgetServiceTest {
             Budget exists = Budget.builder().id(100L).category(food).user(user).money(BigDecimal.valueOf(10_000L)).period(key).build();
             given(budgetRepository.findByCategoryAndPeriodAndUser(food, key, user)).willReturn(exists);
 
-            assertThatThrownBy(() -> service.createBudget(req, user))
-                    .isInstanceOf(BaseException.class);
+            assertThatThrownBy(() -> budgetService.createBudget(req, user))
+                    .isInstanceOf(BaseException.class)
+                    .hasFieldOrPropertyWithValue("status", BaseExceptionStatus.DUPLICATE_BUDGET);
         }
     }
 
@@ -123,7 +129,7 @@ class BudgetServiceTest {
 
             BudgetUpdateRequest req = BudgetUpdateRequest.builder().money(BigDecimal.valueOf(150_000L)).build();
 
-            service.budgetUpdate(1L, req, user);
+            budgetService.budgetUpdate(1L, req, user);
 
             assertThat(budget.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(150_000L));
         }
@@ -132,7 +138,7 @@ class BudgetServiceTest {
         void 실패_예산없음() {
             given(budgetRepository.findById(99L)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.budgetUpdate(99L,
+            assertThatThrownBy(() -> budgetService.budgetUpdate(99L,
                     BudgetUpdateRequest.builder().money(BigDecimal.valueOf(1L)).build(), user))
                     .isInstanceOf(BaseException.class);
         }
@@ -143,7 +149,7 @@ class BudgetServiceTest {
                     .period(LocalDate.of(2025, 9, 1)).build();
             given(budgetRepository.findById(1L)).willReturn(Optional.of(budget));
 
-            assertThatThrownBy(() -> service.budgetUpdate(1L,
+            assertThatThrownBy(() -> budgetService.budgetUpdate(1L,
                     BudgetUpdateRequest.builder().money(BigDecimal.valueOf(1L)).build(), user))
                     .isInstanceOf(BaseException.class);
         }
@@ -155,19 +161,27 @@ class BudgetServiceTest {
 
         @Test
         void 성공_소프트삭제_save호출() {
-            User u = User.builder().id(10L).build();
-            given(userRepository.findById(10L)).willReturn(Optional.of(u));
+            Budget b = Budget.builder()
+                    .id(10L)
+                    .user(user)
+                    .category(food)
+                    .money(BigDecimal.TEN)
+                    .period(LocalDate.now())
+                    .build();
 
-            service.budgetSoftDelete(10L);
+            given(budgetRepository.findById(10L)).willReturn(Optional.of(b));
 
-            then(userRepository).should().save(u);
+            budgetService.budgetSoftDelete(10L);
+
+            then(budgetRepository).should().save(b);
+            assertThat(b.getDeletedAt()).isNotNull();
         }
 
         @Test
         void 실패_유저없음() {
-            given(userRepository.findById(10L)).willReturn(Optional.empty());
+            given(budgetRepository.findById(10L)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.budgetSoftDelete(10L))
+            assertThatThrownBy(() -> budgetService.budgetSoftDelete(10L))
                     .isInstanceOf(BaseException.class);
         }
     }
@@ -178,45 +192,97 @@ class BudgetServiceTest {
 
         @Test
         void 성공_하드삭제_delete호출() {
-            User u = User.builder().id(11L).build();
-            given(userRepository.findById(11L)).willReturn(Optional.of(u));
+            Budget b = Budget.builder()
+                    .id(11L)
+                    .user(user)
+                    .category(food)
+                    .money(BigDecimal.TEN)
+                    .period(LocalDate.now())
+                    .build();
 
-            service.budgetHardDelete(11L);
+            given(budgetRepository.findById(11L)).willReturn(Optional.of(b));
 
-            then(userRepository).should().delete(u);
+            budgetService.budgetHardDelete(11L);
+
+            then(budgetRepository).should().delete(b);
         }
 
         @Test
         void 실패_유저없음() {
-            given(userRepository.findById(11L)).willReturn(Optional.empty());
+            given(budgetRepository.findById(11L)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.budgetHardDelete(11L))
+            assertThatThrownBy(() -> budgetService.budgetHardDelete(11L))
                     .isInstanceOf(BaseException.class);
         }
     }
+
 
     @Nested
     @DisplayName("budgetRecommend")
     class BudgetRecommend {
 
         @Test
-        void 성공_리포지토리위임_결과반환() {
+        @DisplayName("성공_예산데이터기반_추천금액_계산")
+        void 성공_예산데이터기반_추천금액_계산() {
+            // given
             long totalAmount = 1_000_000L;
-            List<BudgetRecommendResponse> list = List.of(
-                    new BudgetRecommendResponse(food, 300_000L)
+
+            List<Budget> budgets = List.of(
+                    Budget.builder()
+                            .id(1L)
+                            .category(food)
+                            .money(new BigDecimal("600000"))
+                            .period(LocalDate.now())
+                            .user(user)
+                            .build(),
+                    Budget.builder()
+                            .id(2L)
+                            .category(transport)
+                            .money(new BigDecimal("400000"))
+                            .period(LocalDate.now())
+                            .user(user)
+                            .build()
             );
-            given(budgetRepository.findByAverage(totalAmount)).willReturn(list);
+
+            given(budgetRepository.findAllWithCategory()).willReturn(budgets);
 
             // when
-            BudgetRecommendListResponse resp = service.budgetRecommend(totalAmount);
+            BudgetRecommendListResponse resp = budgetService.budgetRecommend(totalAmount);
 
             // then
-            then(budgetRepository).should().findByAverage(totalAmount);
+            then(budgetRepository).should().findAllWithCategory();
+            assertThat(resp.getResponseList()).hasSize(2);
 
-            // 크기 검증
-            assertThat(resp.getResponseList()).hasSize(1);
-            assertThat(resp.getResponseList().get(0).getCategory().getName()).isEqualTo("식비");
-            assertThat(resp.getResponseList().get(0).getAverage()).isEqualTo(300_000L);
+            // 식비 검증 (ID=10)
+            BudgetRecommendResponse foodRecommend = resp.getResponseList().stream()
+                    .filter(r -> r.getCategory().getId().equals(10L))
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(foodRecommend.getCategory().getName()).isEqualTo("식비");
+            assertThat(foodRecommend.getAverage()).isEqualTo(600_000L);
+
+            // 교통비 검증 (ID=3)
+            BudgetRecommendResponse transportRecommend = resp.getResponseList().stream()
+                    .filter(r -> r.getCategory().getId().equals(3L))
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(transportRecommend.getCategory().getName()).isEqualTo("교통비");
+            assertThat(transportRecommend.getAverage()).isEqualTo(400_000L);
+        }
+
+        @Test
+        @DisplayName("성공_예산데이터_없을때_빈리스트_반환")
+        void 성공_예산데이터_없을때_빈리스트_반환() {
+            // given
+            long totalAmount = 1_000_000L;
+            given(budgetRepository.findAllWithCategory()).willReturn(Collections.emptyList());
+
+            // when
+            BudgetRecommendListResponse resp = budgetService.budgetRecommend(totalAmount);
+
+            // then
+            then(budgetRepository).should().findAllWithCategory();
+            assertThat(resp.getResponseList()).isEmpty();
         }
     }
 }
