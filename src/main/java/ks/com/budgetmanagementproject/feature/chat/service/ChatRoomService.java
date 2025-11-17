@@ -34,14 +34,14 @@ public class ChatRoomService {
      * @param user user
      * @return save
      */
-    public ChatRoomResponse createRoom(CreateRoomRequest request, User user) {
+    public ChatRoomResponse createRoom(CreateRoomRequest request, String user) {
 
-        User persistedUser = userRepository.findById(user.getId())
+        User persistedUser = userRepository.findByUsername(user)
                 .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
 
         ChatRoom chatRoom = ChatRoom.builder()
                 .roomName(request.getRoomName())
-                .creatorName(user.getUsername())
+                .creatorName(user)
                 .build();
 
         ChatRoomMember member = ChatRoomMember.builder()

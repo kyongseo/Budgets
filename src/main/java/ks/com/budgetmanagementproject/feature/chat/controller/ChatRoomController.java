@@ -8,6 +8,7 @@ import ks.com.budgetmanagementproject.feature.chat.service.ChatRoomService;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
+import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +31,9 @@ public class ChatRoomController {
     @Operation(summary = "✅ 채팅방 생성", description = "로그인한 사용자가 채팅방 생성")
     public ResponseEntity<?> createRoom_endpoint(
             @Validated @RequestBody CreateRoomRequest request,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        String user = userDetails.getUsername();
 
         chatRoomService.createRoom(request, user);
 
@@ -52,7 +55,8 @@ public class ChatRoomController {
 
     @GetMapping("/{roomId}")
     @Operation(summary = "✅ 채팅방 상세 조회", description = "채팅방 상세 정보 및 멤버 목록 조회")
-    public ResponseEntity<?> getRoomDetail_endpoint(@PathVariable Long roomId) {
+    public ResponseEntity<?> getRoomDetail_endpoint(
+            @PathVariable Long roomId) {
 
         ChatRoomResponse response = chatRoomService.getRoomById(roomId);
 

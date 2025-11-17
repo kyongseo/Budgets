@@ -6,6 +6,7 @@ import ks.com.budgetmanagementproject.feature.chat.dto.CreateRoomRequest;
 import ks.com.budgetmanagementproject.feature.chat.service.ChatRoomService;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,11 +18,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashSet;
 
-import static io.lettuce.core.KillArgs.Builder.user;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -30,13 +32,10 @@ class ChatRoomControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ObjectMapper objectMapper;
-
     @MockitoBean
     private ChatRoomService chatRoomService;
-
     @MockitoBean
     private UserRepository userRepository;
 
@@ -47,7 +46,7 @@ class ChatRoomControllerTest {
         @Test
         @DisplayName("채팅방_생성_성공")
         void createRoomSuccess() throws Exception {
-            //given
+            // given
             User mockUser = User.builder()
                     .id(1L)
                     .username("testUser")
@@ -58,17 +57,19 @@ class ChatRoomControllerTest {
             CreateRoomRequest request = new CreateRoomRequest("테스트방");
             ChatRoomResponse response = new ChatRoomResponse(1L, "테스트방", "testUser", 1);
 
-            when(chatRoomService.createRoom(any(), any())).thenReturn(response);
+            when(chatRoomService.createRoom(any(CreateRoomRequest.class), eq("testUser")))
+                    .thenReturn(response);
 
             // when & then
             mockMvc.perform(post("/rooms")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request))
-                            .with((org.springframework.test.web.servlet.request.RequestPostProcessor) user(String.valueOf(mockUser)))  // User 직접 전달
+                            .with(user(new CustomUserDetails(mockUser)))
                             .with(csrf()))
-                    .andExpect(status().isCreated());
-
-            verify(chatRoomService).createRoom(any(), eq(mockUser));
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.code").value(201))
+                    .andExpect(jsonPath("$.message").value("채팅방이 생성되었습니다."));
+            verify(chatRoomService).createRoom(any(CreateRoomRequest.class), eq("testUser"));
         }
     }
 }
