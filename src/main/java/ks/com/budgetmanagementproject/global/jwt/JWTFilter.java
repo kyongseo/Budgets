@@ -14,7 +14,6 @@ import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class JWTFilter extends OncePerRequestFilter {
+public class  JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
     private final RoleRepository roleRepository;
@@ -149,14 +148,16 @@ public class JWTFilter extends OncePerRequestFilter {
         User user = User.builder()
                 .id(userId)
                 .username(username)
-                .password("temp")
                 .roles(new HashSet<>(roles))
                 .build();
 
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
-        Authentication authToken = new UsernamePasswordAuthenticationToken(
-                customUserDetails, null, customUserDetails.getAuthorities()
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(
+                        customUserDetails,
+                        null,
+                        customUserDetails.getAuthorities()
         );
         SecurityContextHolder.getContext().setAuthentication(authToken);
     }

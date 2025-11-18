@@ -14,7 +14,7 @@ public class ChatController {
     private final JWTUtil jwtUtil;
 
     @GetMapping("/chat")
-    public String chatPage(Model model, HttpServletRequest request) {
+    public String chatPage_endpoint(Model model, HttpServletRequest request) {
         String accessToken = jwtUtil.getAccessTokenFromCookies(request);
 
         String username = "익명";

@@ -19,9 +19,11 @@ public class BudgetCategoryService {
      * 전체 예산 카테고리 목록을 불러와서 BudgetCategoryResponse를 반환한다.
      * @return budgetCategoryResponse
      */
-    public BudgetCategoryResponse categoryList() {
-        List<BudgetCategory> list = categoryRepository.findAll();
+    public List<BudgetCategoryResponse> categoryList() {
 
-        return new BudgetCategoryResponse(list);
+        List<BudgetCategory> list = categoryRepository.findAll();
+        return list.stream()
+                .map(BudgetCategoryResponse::from)
+                .toList();
     }
 }

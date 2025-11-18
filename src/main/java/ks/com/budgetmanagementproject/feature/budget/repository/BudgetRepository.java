@@ -1,6 +1,5 @@
 package ks.com.budgetmanagementproject.feature.budget.repository;
 
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendResponse;
 import ks.com.budgetmanagementproject.feature.budget.entity.Budget;
 import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureRecommend;
@@ -18,14 +17,10 @@ public interface BudgetRepository extends JpaRepository<Budget,Long> {
 
     Budget findByCategoryAndPeriodAndUser(BudgetCategory category, LocalDate period, User user);
 
-    @Query("select new ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendResponse(" +
-            "b.category, " +
-            "cast(round(:totalAmount * (sum(b.money)) / ((select sum(b2.money) from Budget b2))) as integer)" +
-            ") " +
-            "from Budget b " +
-            "group by b.category")
-    List<BudgetRecommendResponse> findByAverage(@Param("totalAmount") long totalAmount);
+    List<Budget> findAll();
 
+    @Query("SELECT b FROM Budget b JOIN FETCH b.category")
+    List<Budget> findAllWithCategory();
 
     @Query("select new ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureRecommend(" +
             "b.category, " +

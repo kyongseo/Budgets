@@ -1,5 +1,6 @@
 package ks.com.budgetmanagementproject.feature.expenditure.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureUpdateRequest;
@@ -29,6 +30,7 @@ public class Expenditure extends BaseTimeEntity {
     @Column(length = 60)
     private String memo;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDate period;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,5 +58,9 @@ public class Expenditure extends BaseTimeEntity {
 
     public void excludingTotalUpdate(boolean excludingTotal) {
         this.excludingTotal = excludingTotal;
+    }
+
+    public boolean isOwnedBy(User user) {
+        return this.user.getId().equals(user.getId());
     }
 }

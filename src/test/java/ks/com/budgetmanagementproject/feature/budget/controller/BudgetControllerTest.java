@@ -1,11 +1,7 @@
 package ks.com.budgetmanagementproject.feature.budget.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendListResponse;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendResponse;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
-import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
-import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
+import ks.com.budgetmanagementproject.feature.budget.dto.*;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -58,7 +54,7 @@ class BudgetControllerTest {
                     .period(YearMonth.of(2025, 9))
                     .build();
 
-            doNothing().when(budgetService).budgetSetting(any(BudgetSettingRequest.class), any());
+            doNothing().when(budgetService).createBudget(any(BudgetSettingRequest.class), any());
 
             // when & then
             mockMvc.perform(post("/budgets")
@@ -69,7 +65,7 @@ class BudgetControllerTest {
                     .andExpect(jsonPath("$.code").value(201))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(budgetService).budgetSetting(any(BudgetSettingRequest.class), any());
+            verify(budgetService).createBudget(any(BudgetSettingRequest.class), any());
         }
 
         @Test
@@ -88,7 +84,7 @@ class BudgetControllerTest {
                     .andDo(print())
                     .andExpect(status().isBadRequest());
 
-            verify(budgetService, never()).budgetSetting(any(), any());
+            verify(budgetService, never()).createBudget(any(), any());
         }
     }
 
@@ -107,7 +103,7 @@ class BudgetControllerTest {
 
             doNothing().when(budgetService).budgetUpdate(eq(budgetId), any(BudgetUpdateRequest.class), any());
 
-            // when & then
+            // when
             mockMvc.perform(patch("/budgets/{budgetId}", budgetId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -116,6 +112,7 @@ class BudgetControllerTest {
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.message").exists());
 
+            // then
             verify(budgetService).budgetUpdate(eq(budgetId), any(BudgetUpdateRequest.class), any());
         }
     }
@@ -173,9 +170,19 @@ class BudgetControllerTest {
         void budgetRecommendSuccess() throws Exception {
             // given
             long totalAmount = 1_000_000L;
-            BudgetCategory food = BudgetCategory.builder().id(1L).name("식비").build();
-            BudgetRecommendResponse recommendResponse = new BudgetRecommendResponse(food, 300_000L);
-            BudgetRecommendListResponse response = new BudgetRecommendListResponse(List.of(recommendResponse));
+            BudgetCategoryResponse foodCategoryResponse = BudgetCategoryResponse.builder()
+                    .id(1L)
+                    .name("식비")
+                    .build();
+
+            BudgetRecommendResponse recommendResponse = BudgetRecommendResponse.builder()
+                    .category(foodCategoryResponse)
+                    .average(300_000L)
+                    .build();
+
+            BudgetRecommendListResponse response = new BudgetRecommendListResponse(
+                    List.of(recommendResponse)
+            );
 
             given(budgetService.budgetRecommend(totalAmount)).willReturn(response);
 

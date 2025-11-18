@@ -1,8 +1,8 @@
 package ks.com.budgetmanagementproject.feature.budget.controller;
 
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetCategoryResponse;
-import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetCategoryService;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
@@ -39,23 +40,28 @@ class BudgetCategoryControllerTest {
         @DisplayName("카테고리_목록_조회_성공")
         void categoryListSuccess() throws Exception {
             // given
-            BudgetCategory food = BudgetCategory.builder().id(1L).name("식비").build();
-            BudgetCategory trans = BudgetCategory.builder().id(2L).name("교통").build();
-            BudgetCategoryResponse response = new BudgetCategoryResponse(List.of(food, trans));
+            BudgetCategoryResponse food = BudgetCategoryResponse.builder()
+                    .id(1L)
+                    .name("식비")
+                    .build();
 
-            given(categoryService.categoryList()).willReturn(response);
+            BudgetCategoryResponse trans = BudgetCategoryResponse.builder()
+                    .id(2L)
+                    .name("교통")
+                    .build();
+
+            List<BudgetCategoryResponse> responseList = List.of(food, trans);
+
+            given(categoryService.categoryList()).willReturn(responseList);
 
             // when & then
             mockMvc.perform(get("/budget/categories"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(200))
-                    .andExpect(jsonPath("$.message").value("예산 카테고리 목록 조회에 성공했습니다."))
-                    .andExpect(jsonPath("$.result.categories").isArray())
-                    .andExpect(jsonPath("$.result.categories[0].id").value(1))
-                    .andExpect(jsonPath("$.result.categories[0].name").value("식비"))
-                    .andExpect(jsonPath("$.result.categories[1].id").value(2))
-                    .andExpect(jsonPath("$.result.categories[1].name").value("교통"));
+                    .andExpect(jsonPath("$.code").value(BaseResponseStatus.BUDGET_CATEGORY_LIST_SUCCESS.getStatus().value()))
+                    .andExpect(jsonPath("$.message").value(BaseResponseStatus.BUDGET_CATEGORY_LIST_SUCCESS.getMessage()))
+                    .andExpect(jsonPath("$.result[0].name").value("식비"))
+                    .andExpect(jsonPath("$.result.length()").value(2));
 
             verify(categoryService).categoryList();
         }
@@ -64,17 +70,13 @@ class BudgetCategoryControllerTest {
         @DisplayName("카테고리_목록_조회_성공_빈_리스트")
         void categoryListSuccessEmpty() throws Exception {
             // given
-            BudgetCategoryResponse response = new BudgetCategoryResponse(List.of());
-
-            given(categoryService.categoryList()).willReturn(response);
+            given(categoryService.categoryList()).willReturn(Collections.emptyList());
 
             // when & then
             mockMvc.perform(get("/budget/categories"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(200))
-                    .andExpect(jsonPath("$.message").exists())
-                    .andExpect(jsonPath("$.result.categories").isEmpty());
+                    .andExpect(jsonPath("$.result.length()").value(0));
 
             verify(categoryService).categoryList();
         }

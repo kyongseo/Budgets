@@ -1,14 +1,14 @@
 package ks.com.budgetmanagementproject.feature.chat.service;
 
+import ks.com.budgetmanagementproject.feature.chat.dto.ChatRoomMemberResponse;
 import ks.com.budgetmanagementproject.feature.chat.dto.ChatRoomResponse;
 import ks.com.budgetmanagementproject.feature.chat.dto.CreateRoomRequest;
-import ks.com.budgetmanagementproject.feature.chat.dto.MemberInfo;
-import ks.com.budgetmanagementproject.feature.chat.dto.RoomDetailResponse;
 import ks.com.budgetmanagementproject.feature.chat.entity.ChatRoom;
 import ks.com.budgetmanagementproject.feature.chat.entity.ChatRoomMember;
 import ks.com.budgetmanagementproject.feature.chat.repository.ChatRoomMemberRepository;
 import ks.com.budgetmanagementproject.feature.chat.repository.ChatRoomRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,6 +26,7 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final UserRepository userRepository;
 
     /**
      * 채팅방 생성
@@ -34,46 +34,39 @@ public class ChatRoomService {
      * @param user user
      * @return save
      */
-    public ChatRoomResponse createRoom(CreateRoomRequest request, User user) {
+    public ChatRoomResponse createRoom(CreateRoomRequest request, String user) {
+
+        User persistedUser = userRepository.findByUsername(user)
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
 
         ChatRoom chatRoom = ChatRoom.builder()
                 .roomName(request.getRoomName())
-                .creatorName(user.getUsername())
+                .creatorName(user)
                 .build();
-
-        ChatRoom savedRoom = chatRoomRepository.save(chatRoom);
 
         ChatRoomMember member = ChatRoomMember.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .chatRoom(savedRoom)
+                .userId(persistedUser.getId())
+                .username(persistedUser.getUsername())
+                .chatRoom(chatRoom)
                 .build();
-        chatRoomMemberRepository.save(member);
 
-        return ChatRoomResponse.builder()
-                .id(savedRoom.getId())
-                .roomName(savedRoom.getRoomName())
-                .creatorName(savedRoom.getCreatorName())
-                .memberCount(1)
-                .build();
+        chatRoom.addMember(member);
+        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
+
+        return ChatRoomResponse.from(savedChatRoom);
     }
 
     /**
-     *  채팅방 목록 조회
+     * 채팅방 목록 조회
      * @return 목록
      */
     @Transactional(readOnly = true)
-    public List<ChatRoomResponse> getRoomList() {
+    public List<ChatRoomResponse> getAllRooms() {
 
-        List<ChatRoomResponse> rooms = chatRoomRepository.findAll().stream()
-                .map(room -> ChatRoomResponse.builder()
-                        .id(room.getId())
-                        .roomName(room.getRoomName())
-                        .creatorName(room.getCreatorName())
-                        .memberCount(room.getMembers().size())
-                        .build())
-                .collect(Collectors.toList());
-        return rooms;
+        List<ChatRoom> chatroom = chatRoomRepository.findAll();
+        return chatroom.stream()
+                .map(ChatRoomResponse::from)
+                .toList();
     }
 
     /**
@@ -82,56 +75,57 @@ public class ChatRoomService {
      * @return 목록 상세
      */
     @Transactional(readOnly = true)
-    public RoomDetailResponse getRoomDetail(Long roomId) {
-
+    public ChatRoomResponse getRoomById(Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(BaseExceptionStatus.CHATROOM_NOT_FOUND));
 
-        List<MemberInfo> members = chatRoom.getMembers().stream()
-                .map(member -> new MemberInfo(member.getUserId(), member.getUsername()))
-                .collect(Collectors.toList());
-
-        return RoomDetailResponse.builder()
-                .id(chatRoom.getId())
-                .roomName(chatRoom.getRoomName())
-                .creatorName(chatRoom.getCreatorName())
-                .members(members)
-                .build();
+        return ChatRoomResponse.from(chatRoom);
     }
-
     /**
      * 채팅방 입장
      * @param roomId 방번호
-     * @param user 사용자
+     * @param user   사용자
      */
-    public void joinRoom(Long roomId, User user) {
+    public void joinChatRoom(Long roomId, User user) {
+
+        User persistedUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(BaseExceptionStatus.CHATROOM_NOT_FOUND));
 
-        if (chatRoomMemberRepository.existsByChatRoom_IdAndUserId(roomId, user.getId())) {
+        if (chatRoom.hasMember(persistedUser.getId())) {
             throw new BaseException(BaseExceptionStatus.CHATROOM_ALREADY_JOINED);
         }
 
         ChatRoomMember member = ChatRoomMember.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
+                .userId(persistedUser.getId())
+                .username(persistedUser.getUsername())
                 .chatRoom(chatRoom)
                 .build();
 
-        chatRoomMemberRepository.save(member);
+        chatRoom.addMember(member);
+
+        ChatRoomMemberResponse.of(chatRoom, persistedUser);
     }
 
     /**
      * 채팅방 퇴장
      * @param roomId 방번호
-     * @param user 사용자
+     * @param user   사용자
      */
     public void leaveRoom(Long roomId, User user) {
 
-        ChatRoomMember member = chatRoomMemberRepository.findByChatRoom_IdAndUserId(roomId, user.getId())
+        User persistedUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.CHATROOM_NOT_FOUND));
+        ChatRoomMember member = chatRoomMemberRepository.findByChatRoom_IdAndUserId(roomId, persistedUser.getId())
                 .orElseThrow(() -> new BaseException(BaseExceptionStatus.CHATROOM_NOT_MEMBER));
 
+        chatRoom.removeMember(member);
         chatRoomMemberRepository.delete(member);
+
+        ChatRoomMemberResponse.of(chatRoom, persistedUser);
     }
 }
