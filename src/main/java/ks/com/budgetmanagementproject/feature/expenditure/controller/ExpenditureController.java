@@ -13,9 +13,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/expenditures")
@@ -26,8 +23,10 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 생성",  description = "지출 생성")
     @PostMapping
-    public ResponseEntity<?> expenditureCreate(@Validated @RequestBody ExpenditureCreateRequest request,
-                                               @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureCreate_endpoint(
+            @Validated @RequestBody ExpenditureCreateRequest request,
+            @AuthenticationPrincipal User user) {
+
         expenditureService.expenditureCreate(request, user);
 
         return ResponseEntity
@@ -37,9 +36,11 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 수정", description = "지출 수정")
     @PatchMapping("/{expenditureId}")
-    public ResponseEntity<?> expenditureUpdate(@PathVariable Long expenditureId,
-                                               @Validated @RequestBody ExpenditureUpdateRequest request,
-                                               @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureUpdate_endpoint(
+            @PathVariable Long expenditureId,
+            @Validated @RequestBody ExpenditureUpdateRequest request,
+            @AuthenticationPrincipal User user) {
+
         expenditureService.expenditureUpdate(expenditureId, request, user);
 
         return ResponseEntity
@@ -49,11 +50,11 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 목록 조회", description = "지출 목록 조회")
     @GetMapping
-    public ResponseEntity<?> expenditureList(@RequestParam LocalDate minPeriod, @RequestParam LocalDate maxPeriod,
-                                             @RequestParam String categoryName, @RequestParam BigDecimal  minMoney,
-                                             @RequestParam BigDecimal maxMoney, @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureList_endpoint(
+            @Validated @ModelAttribute ExpenditureListRequest request,
+            @AuthenticationPrincipal User user) {
 
-        ExpenditureListResponse response = expenditureService.expenditureList(minPeriod, maxPeriod, categoryName, minMoney, maxMoney, user);
+        ExpenditureListResponse response = expenditureService.getExpenditureList(request, user);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_LIST_SUCCESS.getStatus())
@@ -62,8 +63,10 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 상세 조회", description = "지출 상세 조회")
     @GetMapping("/{expenditureId}")
-    public ResponseEntity<?> expenditureDetail(@PathVariable Long expenditureId,
-                                               @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureDetail(
+            @PathVariable Long expenditureId,
+            @AuthenticationPrincipal User user) {
+
         ExpenditureDetailResponse response = expenditureService.expenditureDetail(expenditureId, user);
 
         return ResponseEntity
@@ -73,8 +76,10 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 삭제(soft)", description = "지출 삭제(soft)")
     @DeleteMapping("/soft-delete/{expenditureId}")
-    public ResponseEntity<?> expenditureSoftDelete(@PathVariable Long expenditureId,
-                                                   @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureSoftDelete(
+            @PathVariable Long expenditureId,
+            @AuthenticationPrincipal User user) {
+
         expenditureService.expenditureSoftDelete(expenditureId, user);
 
         return ResponseEntity
@@ -84,8 +89,10 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 삭제(hard)", description = "지출 삭제(hard)")
     @DeleteMapping("/hard-delete/{expenditureId}")
-    public ResponseEntity<?> expenditureHardDelete(@PathVariable Long expenditureId,
-                                                   @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureHardDelete(
+            @PathVariable Long expenditureId,
+            @AuthenticationPrincipal User user) {
+
         expenditureService.expenditureHardDelete(expenditureId, user);
 
         return ResponseEntity
@@ -95,10 +102,12 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 합계 제외 업데이트", description = "지출 합계 제외 업데이트")
     @PatchMapping("/except/{expenditureId}")
-    public ResponseEntity<?> expenditureExceptUpdate(@PathVariable Long expenditureId,
-                                                     @AuthenticationPrincipal User user,
-                                                     @RequestParam boolean excludingTotal) {
-        expenditureService.expenditureExceptUpdate(expenditureId, user, excludingTotal);
+    public ResponseEntity<?> expenditureExceptUpdate(
+            @PathVariable Long expenditureId,
+            @AuthenticationPrincipal User user,
+            @Validated @RequestBody ExpenditureExcludeRequest request) {
+
+        expenditureService.updateExpenditureExclude(expenditureId, user, request);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_EXCEPT_UPDATE_SUCCESS.getStatus())
@@ -107,7 +116,9 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 추천", description = "지출 추천")
     @GetMapping("/recommend")
-    public ResponseEntity<?> expenditureRecommend(@AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureRecommend(
+            @AuthenticationPrincipal User user) {
+
         ExpenditureRecommendResponse response = expenditureService.expenditureRecommend(user);
 
         return ResponseEntity
@@ -117,7 +128,9 @@ public class ExpenditureController {
 
     @Operation(summary = "✅ 지출 안내", description = "지출 안내")
     @GetMapping("/guide")
-    public ResponseEntity<?> expenditureGuide(@AuthenticationPrincipal User user) {
+    public ResponseEntity<?> expenditureGuide(
+            @AuthenticationPrincipal User user) {
+
         ExpenditureGuideResponse response = expenditureService.expenditureGuide(user);
 
         return ResponseEntity

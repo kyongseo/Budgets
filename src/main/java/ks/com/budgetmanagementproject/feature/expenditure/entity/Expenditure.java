@@ -59,4 +59,8 @@ public class Expenditure extends BaseTimeEntity {
     public void excludingTotalUpdate(boolean excludingTotal) {
         this.excludingTotal = excludingTotal;
     }
+
+    public boolean isOwnedBy(User user) {
+        return this.user.getId().equals(user.getId());
+    }
 }
