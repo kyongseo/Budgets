@@ -9,8 +9,6 @@ import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetCategoryRepository;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
-import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
-import ks.com.budgetmanagementproject.feature.user.service.UserService;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -41,12 +39,8 @@ class BudgetServiceTest {
     BudgetRepository budgetRepository;
     @Mock
     BudgetCategoryRepository categoryRepository;
-    @Mock
-    UserRepository userRepository;
     @InjectMocks
     BudgetService budgetService;
-    @InjectMocks
-    UserService userService;
 
     private final User user = User.builder().id(1L).build();
     private final User other = User.builder().id(2L).build();
@@ -59,7 +53,8 @@ class BudgetServiceTest {
     class BudgetSetting {
 
         @Test
-        void 성공_카테고리존재_중복없음_저장() {
+        @DisplayName("성공_카테고리존재_중복없음_저장")
+        void success_when_category_exists_and_no_duplicate() {
             // given
             BudgetSettingRequest req = BudgetSettingRequest.builder()
                     .categoryName("식비")
@@ -83,8 +78,8 @@ class BudgetServiceTest {
         }
 
         @Test
-        @DisplayName("없는 카테고리 뜨는지 테스트")
-        void 실패_카테고리없음() {
+        @DisplayName("실패_카테고리_없음")
+        void fail_when_category_not_found() {
             BudgetSettingRequest req = BudgetSettingRequest.builder()
                     .categoryName("없는카테고리")
                     .money(BigDecimal.valueOf(50_000L))
@@ -97,7 +92,8 @@ class BudgetServiceTest {
         }
 
         @Test
-        void 실패_중복예산() {
+        @DisplayName("실패_중복예산")
+        void fail_when_budget_already_exists() {
             BudgetSettingRequest req = BudgetSettingRequest.builder()
                     .categoryName("식비")
                     .money(BigDecimal.valueOf(50_000L))
@@ -119,7 +115,9 @@ class BudgetServiceTest {
     class BudgetUpdate {
 
         @Test
-        void 성공_본인소유_금액수정() {
+        @DisplayName("성공_본인소유_금액수정")
+        void success_update_amount_by_owner() {
+            // give
             Budget budget = Budget.builder()
                     .id(1L).user(user).category(food)
                     .money(BigDecimal.valueOf(100_000L))
@@ -129,13 +127,16 @@ class BudgetServiceTest {
 
             BudgetUpdateRequest req = BudgetUpdateRequest.builder().money(BigDecimal.valueOf(150_000L)).build();
 
+            // when
             budgetService.budgetUpdate(1L, req, user);
 
+            // then
             assertThat(budget.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(150_000L));
         }
 
         @Test
-        void 실패_예산없음() {
+        @DisplayName("실패_예산없음")
+        void fail_when_budget_not_found() {
             given(budgetRepository.findById(99L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> budgetService.budgetUpdate(99L,
@@ -144,7 +145,8 @@ class BudgetServiceTest {
         }
 
         @Test
-        void 실패_소유자아님() {
+        @DisplayName("실패_소유자아님")
+        void fail_when_not_owner() {
             Budget budget = Budget.builder().id(1L).user(other).category(food).money(BigDecimal.valueOf(10L))
                     .period(LocalDate.of(2025, 9, 1)).build();
             given(budgetRepository.findById(1L)).willReturn(Optional.of(budget));
@@ -160,7 +162,9 @@ class BudgetServiceTest {
     class BudgetSoftDelete {
 
         @Test
-        void 성공_소프트삭제_save호출() {
+        @DisplayName("성공_소프트삭제_save호출")
+        void success_soft_delete_calls_save() {
+            // give
             Budget b = Budget.builder()
                     .id(10L)
                     .user(user)
@@ -171,14 +175,17 @@ class BudgetServiceTest {
 
             given(budgetRepository.findById(10L)).willReturn(Optional.of(b));
 
+            // when
             budgetService.budgetSoftDelete(10L);
 
+            //then
             then(budgetRepository).should().save(b);
             assertThat(b.getDeletedAt()).isNotNull();
         }
 
         @Test
-        void 실패_유저없음() {
+        @DisplayName("실패_유저없음")
+        void fail_when_budget_not_found() {
             given(budgetRepository.findById(10L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> budgetService.budgetSoftDelete(10L))
@@ -191,7 +198,9 @@ class BudgetServiceTest {
     class BudgetHardDelete {
 
         @Test
-        void 성공_하드삭제_delete호출() {
+        @DisplayName("성공_하드삭제_delete호출")
+        void success_hard_delete_calls_delete() {
+            // give
             Budget b = Budget.builder()
                     .id(11L)
                     .user(user)
@@ -202,13 +211,16 @@ class BudgetServiceTest {
 
             given(budgetRepository.findById(11L)).willReturn(Optional.of(b));
 
+            // when
             budgetService.budgetHardDelete(11L);
 
+            // then
             then(budgetRepository).should().delete(b);
         }
 
         @Test
-        void 실패_유저없음() {
+        @DisplayName("실패_유저없음")
+        void fail_when_budget_not_found() {
             given(budgetRepository.findById(11L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> budgetService.budgetHardDelete(11L))
@@ -223,8 +235,8 @@ class BudgetServiceTest {
 
         @Test
         @DisplayName("성공_예산데이터기반_추천금액_계산")
-        void 성공_예산데이터기반_추천금액_계산() {
-            // given
+        void success_calculate_recommended_amount_based_on_budget_data() {
+            // give
             long totalAmount = 1_000_000L;
 
             List<Budget> budgets = List.of(
@@ -272,8 +284,8 @@ class BudgetServiceTest {
 
         @Test
         @DisplayName("성공_예산데이터_없을때_빈리스트_반환")
-        void 성공_예산데이터_없을때_빈리스트_반환() {
-            // given
+        void success_return_empty_list_when_no_budget_data() {
+            // give
             long totalAmount = 1_000_000L;
             given(budgetRepository.findAllWithCategory()).willReturn(Collections.emptyList());
 
