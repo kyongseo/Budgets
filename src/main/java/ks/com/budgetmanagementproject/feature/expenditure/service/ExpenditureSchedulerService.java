@@ -49,7 +49,7 @@ public class ExpenditureSchedulerService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 40 11 * * ?", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 00 08 * * ?", zone = "Asia/Seoul")
     public void expenditureRecommendScheduler() {
         List<User> users = userRepository.findAll();
         log.info("[expenditureRecommendScheduler] 시작 - 대상 사용자: {}명", users.size());
@@ -82,7 +82,7 @@ public class ExpenditureSchedulerService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 20 * * ?", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 22 * * ?", zone = "Asia/Seoul")
     public void expenditureGuideScheduler() {
         List<User> users = userRepository.findAll();
         log.info("[expenditureGuideScheduler] 시작 - 대상 사용자: {}명", users.size());
