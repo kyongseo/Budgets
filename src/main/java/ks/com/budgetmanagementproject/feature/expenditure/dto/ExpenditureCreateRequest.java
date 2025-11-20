@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @Builder
 public class ExpenditureCreateRequest {
 
-    @Schema(description = "지출 금액", example = "20000")
+    @Schema(description = "지출 금액", example = "10000")
     @NotNull(message = "지출 금액을 입력해주세요.")
     @DecimalMin(value = "0.0", inclusive = false, message = "지출 금액은 0보다 커야 합니다.")
     @Digits(integer = 10, fraction = 2, message = "지출 금액은 최대 10자리 정수와 2자리 소수로 입력해주세요.")

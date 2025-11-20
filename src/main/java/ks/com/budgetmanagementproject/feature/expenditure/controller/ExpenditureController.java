@@ -21,7 +21,7 @@ public class ExpenditureController {
 
     private final ExpenditureService expenditureService;
 
-    @Operation(summary = "✅ 지출 생성",  description = "지출 생성")
+    @Operation(summary = "✅ 지출 생성",  description = "새로운 지출 내역을 등록합니다. 날짜, 금액, 카테고리, 메모 등을 포함할 수 있습니다.")
     @PostMapping
     public ResponseEntity<?> expenditureCreate_endpoint(
             @Validated @RequestBody ExpenditureCreateRequest request,
@@ -34,7 +34,7 @@ public class ExpenditureController {
                 .body(BaseResponse.of(BaseResponseStatus.EXPENDITURE_CREATE_SUCCESS));
     }
 
-    @Operation(summary = "✅ 지출 수정", description = "지출 수정")
+    @Operation(summary = "✅ 지출 수정", description = "기존 지출 내역의 정보를 수정합니다. 본인의 지출만 수정 가능합니다.")
     @PatchMapping("/{expenditureId}")
     public ResponseEntity<?> expenditureUpdate_endpoint(
             @PathVariable Long expenditureId,
@@ -48,7 +48,8 @@ public class ExpenditureController {
                 .body(BaseResponse.of(BaseResponseStatus.EXPENDITURE_UPDATE_SUCCESS));
     }
 
-    @Operation(summary = "✅ 지출 목록 조회", description = "지출 목록 조회")
+    @Operation(summary = "✅ 지출 목록 조회", description = "기간, 카테고리, 최소/최대 금액 등의 조건으로 지출 내역을 조회합니다. " +
+            "합계 제외 설정된 지출은 필터링 옵션에 따라 조회 여부가 결정됩니다.")
     @GetMapping
     public ResponseEntity<?> expenditureList_endpoint(
             @Validated @ModelAttribute ExpenditureListRequest request,
@@ -100,7 +101,7 @@ public class ExpenditureController {
                 .body(BaseResponse.of(BaseResponseStatus.EXPENDITURE_HARD_DELETE_SUCCESS));
     }
 
-    @Operation(summary = "✅ 지출 합계 제외 업데이트", description = "지출 합계 제외 업데이트")
+    @Operation(summary = "✅ 지출 합계 제외 업데이트", description = "특정 지출 내역을 총 합계 계산에서 제외시킵니다.")
     @PatchMapping("/except/{expenditureId}")
     public ResponseEntity<?> expenditureExceptUpdate(
             @PathVariable Long expenditureId,
