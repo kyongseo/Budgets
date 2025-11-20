@@ -3,6 +3,8 @@ package ks.com.budgetmanagementproject.global.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -36,6 +38,27 @@ public class JWTUtil {
                 .getBody();
     }
 
+    public Claims parseAccessToken(String accessToken) {
+        return extractClaims(accessToken);
+    }
+
+    public String getUsernameFromToken(String token) {
+        Claims claims = extractClaims(token);
+        return claims.getSubject();
+    }
+
+    public String getAccessTokenFromCookies(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
     public String getUsername(String token) {
         return extractClaims(token).get("username", String.class);
     }
@@ -54,6 +77,10 @@ public class JWTUtil {
 
     public void isExpired(String token) {
         extractClaims(token).getExpiration();
+    }
+
+    public boolean isExpiredDate(String token) {
+        return extractClaims(token).getExpiration().before(new Date());
     }
 
     public String createAccessToken(Long userId, String username, List<String> roles, Long expiredMs) {

@@ -26,17 +26,21 @@ spring:
     init:
       mode: always
       data-locations: classpath:data.sql
+
 logging:
   level:
-    org:
-      hibernate:
-        SQL: DEBUG
+    ks.com.budgetmanagementproject: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
 
 springdoc:
   swagger-ui:
+    display-operation-id: true
+#    operationsSorter: "(a,b)=>{const ord=o=>o.operation?.['x-order'] ?? parseInt((o.operation?.operationId||'').match(/^\\d+/)?.[0]||'0',10); return ord(a)-ord(b);}"
+#    tagsSorter: "alpha"
     path: /swagger-ui.html
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
+  cache:
+    disabled: true
 
 server:
   port: 9091

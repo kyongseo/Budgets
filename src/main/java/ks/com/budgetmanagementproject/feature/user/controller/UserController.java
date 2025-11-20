@@ -3,23 +3,23 @@ package ks.com.budgetmanagementproject.feature.user.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginResponse;
+import ks.com.budgetmanagementproject.feature.user.dto.SignUpRequest;
+import ks.com.budgetmanagementproject.feature.user.dto.UpdateRequest;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.service.UserService;
-import ks.com.budgetmanagementproject.global.security.AuthUtil;
-import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.validation.BindingResult;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -30,51 +30,67 @@ import java.util.Map;
 @SecurityRequirement(name = "bearer Authentication")
 public class UserController {
 
+
     private final UserService userService;
 
-    @Operation(operationId = "01-signup", summary = "✅ 회원가입", description = "회원가입")
+    @Operation(summary = "✅ 회원가입", description = "회원가입")
     @PostMapping("/signup")
-    @Tag(name = "User")
-    public ResponseEntity<?> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
-        try {
-            userService.signUp(signUpReqDto);
-            return ResponseEntity.ok(Map.of("message", "회원가입 성공"));
-        }catch (Exception e) {
-            log.error("signUp Error: {}", e.getMessage());
-            System.out.println("signUp Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "회원가입 실패",  "message", e.getMessage()));
-        }
+    public ResponseEntity<?> signUp(@Validated @RequestBody SignUpRequest request) {
+
+        userService.signUp(request);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.SIGN_UP_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.SIGN_UP_SUCCESS));
     }
 
-    @Operation(operationId = "02-login", summary = "✅ 로그인", description = "로그인")
+    @Operation(summary = "✅ 로그인", description = "로그인")
     @PostMapping("/login")
-    @Tag(name = "User")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto, BindingResult bindingResult, HttpServletResponse response) {
+    public ResponseEntity<?> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response) {
 
-        if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body("필드 에러 발생");
-        }
-        return userService.login(loginReqDto, response);
+        LoginResponse loginResponse = userService.login(request, response);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.LOGIN_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.LOGIN_SUCCESS, loginResponse));
     }
 
-    @Operation(operationId = "03-currentUser", summary = "✅ 로그인 사용자 정보 조회", description = "로그인 사용자 정보 조회")
-    @GetMapping("/")
-    @Tag(name = "User")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        if (!AuthUtil.isAuthenticated(authentication)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "로그인되지 않은 사용자입니다."));
-        }
+    @Operation(summary = "✅ AccessToken 재발급", description = "AccessToken 재발급")
+    @PostMapping("/refresh")
+    public ResponseEntity<?> reissueToken(
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
-        Object principal = authentication.getPrincipal();
+        String newLoginResponse = userService.reissueToken(request, response);
 
-        if (principal instanceof CustomUserDetails customUser) {
-            return ResponseEntity.ok(Map.of(
-                    "username", customUser.getUsername(),
-                    "roles", customUser.getAuthorities()
-            ));
-        }
+        return ResponseEntity
+                .status(BaseResponseStatus.ACCESS_TOKEN_REISSUE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.ACCESS_TOKEN_REISSUE_SUCCESS, newLoginResponse));
+    }
 
-        return ResponseEntity.ok(Map.of("principal", principal.toString()));
+    @Operation(summary = "✅ 사용자 정보 변경", description = "사용자 정보 변경")
+    @PatchMapping()
+    public ResponseEntity<?> getUpdateUser(
+            @AuthenticationPrincipal User user,
+            @Validated @RequestBody UpdateRequest request) {
+
+        userService.updateUser(user, request);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.USER_UPDATE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.USER_UPDATE_SUCCESS));
+    }
+
+    @Operation(summary = "✅ 로그아웃", description = "로그아웃")
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response)
+    {
+        userService.logout(response);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.LOGOUT_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.LOGOUT_SUCCESS));
     }
 }

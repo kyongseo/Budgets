@@ -1,28 +1,27 @@
 package ks.com.budgetmanagementproject.feature.user.service;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
-import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginResDto;
-import ks.com.budgetmanagementproject.feature.user.dto.SignUpReqDto;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.user.dto.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.global.common.logger.BaseException;
+import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,28 +36,23 @@ public class UserService {
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
 
-    @Transactional
-    public boolean isExistsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
-
     /**
-     * 회원 가입
-     * @param signUpReqDto : 이메일, 비밀번호
+     * 회원가입
+     * @param request : 이메일, 비밀번호
      */
     @Transactional
-    public void signUp(@Valid SignUpReqDto signUpReqDto) {
+    public void signUp(SignUpRequest request) {
 
-        Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("USER not found"));
-
-        if (isExistsByUsername(signUpReqDto.getUsername())) {
-            throw new IllegalArgumentException("Username is already in use");
+        if (isExistsByUsername(request.getUsername())) {
+            throw new BaseException(BaseExceptionStatus.DUPLICATE_EMAIL);
         }
 
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.FORBIDDEN_USER));
+
         User user = User.builder()
-                .username(signUpReqDto.getUsername())
-                .password(passwordEncoder.encode(signUpReqDto.getPassword()))
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(userRole))
                 .build();
 
@@ -67,30 +61,31 @@ public class UserService {
 
     /**
      * 로그인
-     * @param userLoginDto 이메일, 비밀번호
-     * @param response Token 저장 위치
-     * @return response
+     * @param request 이메일, 비밀번호
+     * @param response 응답
+     * @return 토큰
      */
-    public ResponseEntity<?> login(LoginReqDto userLoginDto, HttpServletResponse response) {
+    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
 
-        Optional<User> user = userRepository.findByUsername(userLoginDto.getUsername());
-        if (!user.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ID does not exist");
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BaseException(BaseExceptionStatus.LOGIN_USER_NOT_EXIST);
         }
-        if (!passwordEncoder.matches(userLoginDto.getPassword(), user.get().getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("password is incorrect");
-        }
 
-        List<String> roles = user.get().getRoles().stream().map(Role::getName).collect(Collectors.toList());
+        List<String> roles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
 
-        String accessToken = jwtUtil.createAccessToken(user.get().getId(), user.get().getUsername(), roles, JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT);
-        String refreshToken = jwtUtil.createRefreshToken(user.get().getId(), user.get().getUsername(), roles, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
+        String accessToken = jwtUtil.createAccessToken(user.getId(), user.getUsername(), roles, JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT);
+        String refreshToken = jwtUtil.createRefreshToken(user.getId(), user.getUsername(), roles, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
 
         RefreshToken rt = RefreshToken.builder()
-                        .username(user.get().getUsername())
-                        .refresh(refreshToken)
-                        .expiresAt(System.currentTimeMillis() + JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT)
-                        .build();
+                .username(user.getUsername())
+                .refresh(refreshToken)
+                .expiresAt(System.currentTimeMillis() + JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT)
+                .build();
 
         refreshRepository.save(rt);
 
@@ -106,14 +101,108 @@ public class UserService {
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
+        response.setHeader("accessToken", accessToken);
 
-        LoginResDto loginResponseDto = LoginResDto.builder()
+        return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .userId(user.get().getId())
-                .username(user.get().getUsername())
+                .userId(user.getId())
+                .username(user.getUsername())
                 .build();
+    }
 
-        return ResponseEntity.ok(loginResponseDto);
+    /**
+     * accessToken 재발급
+     * @param request 요청
+     * @param response 응답
+     * @return newAccessToken
+     */
+    public String reissueToken(HttpServletRequest request, HttpServletResponse response) {
+
+        String refreshToken = resolveRefreshToken(request);
+        if (refreshToken == null) {
+            throw new BaseException(BaseExceptionStatus.NON_EXISTENT_TOKEN);
+        }
+
+        try {
+            jwtUtil.isExpired(refreshToken);
+        } catch (ExpiredJwtException e) {
+            throw new BaseException(BaseExceptionStatus.NON_EXISTENT_TOKEN);
+        }
+
+        String username = jwtUtil.getUsername(refreshToken);
+        Long userId = jwtUtil.getUserId(refreshToken);
+        List<String> roles = List.of(jwtUtil.getRole(refreshToken).split(","));
+
+        String newAccessToken = jwtUtil.createAccessToken(
+                userId, username, roles, JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT);
+
+        Cookie cookie = new Cookie("accessToken", newAccessToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(Math.toIntExact(JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT / 1000));
+        response.addCookie(cookie);
+
+        return newAccessToken;
+    }
+
+    /**
+     * 사용자 정보 업데이트
+     * @param request nickname, phoneNumber
+     */
+    @Transactional
+    public void updateUser(User user, UpdateRequest request) {
+        User persistedUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
+
+        persistedUser.updateUserInfo(request.getNickname(), request.getPhoneNumber());
+
+        UpdateResponse.from(user);
+    }
+
+    /**
+     * 로그아웃 처리
+     * @param response HTTP 응답
+     */
+    public void logout(HttpServletResponse response) {
+
+        String accessToken = response.getHeader("accessToken");
+        String refreshToken = response.getHeader("refreshToken");
+
+        if (accessToken == null && refreshToken == null) {
+            return;
+        }
+        SecurityContextHolder.clearContext();
+
+        if (accessToken != null) {
+            deleteCookie(response, "accessToken");
+        }
+        if (refreshToken != null) {
+            deleteCookie(response, "refreshToken");
+        }
+    }
+
+    private boolean isExistsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    private String resolveRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private void deleteCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        response.addCookie(cookie);
     }
 }

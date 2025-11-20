@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -39,10 +39,12 @@ public class SecurityConfig {
         this.roleRepository = roleRepository;
     }
 
-    String[] allAllowPage = new  String[] {
-            "/",
-            "/users/**",
-            "/reissue"
+    String[] allAllowPage = new String[] {
+            "/", "/chat.html", "/favicon.ico",
+            "/static/**", "/js/**",
+            "/ws-stomp",
+            "/ws-stomp/**", "/pub/**", "/sub/**",
+            "/users/**", "/reissue", "/error", "/chat", "/chat/**", "/rooms/**"
     };
 
     String[] swaggerAllowPage = new  String[] {
@@ -65,23 +67,18 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new JWTFilter(jwtUtil, roleRepository), LoginFilter.class)
+                .addFilterBefore(new JWTFilter(jwtUtil, roleRepository, refreshRepository), LoginFilter.class)
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(corsCustomizer -> corsCustomizer.configurationSource((CorsConfigurationSource) request -> {
 
-                    CorsConfiguration configuration = new CorsConfiguration();
-
-                    configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                    configuration.setAllowedMethods(Collections.singletonList("*"));
-                    configuration.setAllowCredentials(true);
-                    configuration.setAllowedHeaders(Collections.singletonList("*"));
-                    configuration.setMaxAge(3600L);
-
-                    configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
-                    configuration.setExposedHeaders(Collections.singletonList("access"));
-
-                    return configuration;
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowCredentials(true);
+                    config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:9091"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setMaxAge(3600L);
+                    return config;
                 }));
         return http.build();
     }

@@ -5,9 +5,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
-import ks.com.budgetmanagementproject.feature.user.dto.LoginReqDto;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,7 +26,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
-    private RefreshRepository refreshRepository;
+    private final RefreshRepository refreshRepository;
 
     public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository) {
         this.authenticationManager = authenticationManager;
@@ -39,7 +39,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            LoginReqDto loginDTO = objectMapper.readValue(request.getInputStream(), LoginReqDto.class);
+            LoginRequest loginDTO = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
             return authenticationManager.authenticate(authToken);
@@ -63,9 +63,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         addRefreshEntity(username, refreshToken, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
 
-        //response.setHeader("accessToken", accessToken);
         response.addCookie(createCookie("accessToken", accessToken, false));
         response.addCookie(createCookie("refreshToken", refreshToken, true));
+        response.setHeader("accessToken", accessToken);
         response.setStatus(HttpStatus.OK.value());
     }
 
@@ -86,12 +86,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     private Cookie createCookie(String key, String value, boolean httpOnly) {
-
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
-        cookie.setSecure(true);
+        cookie.setMaxAge(24 * 60 * 60);
+        cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(httpOnly);
+        cookie.setAttribute("SameSite", "Lax");
         return cookie;
     }
 }

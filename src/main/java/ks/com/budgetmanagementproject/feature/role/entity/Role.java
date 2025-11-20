@@ -2,10 +2,7 @@ package ks.com.budgetmanagementproject.feature.role.entity;
 
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,7 +10,7 @@ import java.util.Set;
 @Entity
 @Table(name = "roles")
 @Getter
-@Setter
+@Setter @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
@@ -25,5 +22,6 @@ public class Role {
     private String name;
 
     @ManyToMany(mappedBy = "roles")
+    @Builder.Default
     private Set<User> users = new HashSet<>();
 }

@@ -1,7 +1,6 @@
 package ks.com.budgetmanagementproject.feature.budget.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendListResponse;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
@@ -9,6 +8,7 @@ import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetService;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
+import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,59 +23,65 @@ public class BudgetController {
 
     private final BudgetService budgetService;
 
-
-    @Operation(operationId = "01-create-budget", summary = "✅ 예산 설정", responses = {
-            @ApiResponse(responseCode = "201")
-    })
-    @Tag(name = "Budgets")
+    @Operation(summary = "✅ 예산 설정", description = "카테고리별 예산을 설정합니다. 먼저 /api/categories로 카테고리 목록을 조회하세요.")
     @PostMapping
-    public ResponseEntity<?> budgetSetting_endpoint(@Validated @RequestBody BudgetSettingRequest request, @AuthenticationPrincipal User user) {
-        budgetService.budgetSetting(request, user);
+    public ResponseEntity<?> budgetSetting_endpoint(
+            @Validated @RequestBody BudgetSettingRequest request,
+            @AuthenticationPrincipal User user) {
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 설정에 성공했습니다."));
+        budgetService.createBudget(request, user);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.BUDGET_CREATE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.BUDGET_CREATE_SUCCESS));
     }
 
-    @Operation(operationId = "02-update-budget", summary = "✅ 예산 수정", responses = {
-            @ApiResponse(responseCode = "200")
-    })
-    @Tag(name = "Budgets")
+    @Operation(summary = "✅ 예산 수정", description = "예산 수정")
     @PatchMapping("/{budgetId}")
-    public ResponseEntity<?> budgetUpdate_endpoint(@PathVariable Long budgetId, @Validated @RequestBody BudgetUpdateRequest request, @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> budgetUpdate_endpoint(
+            @PathVariable Long budgetId,
+            @Validated @RequestBody BudgetUpdateRequest request,
+            @AuthenticationPrincipal User user) {
+
         budgetService.budgetUpdate(budgetId, request, user);
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 수정에 성공했습니다."));
+        return ResponseEntity
+                .status(BaseResponseStatus.BUDGET_UPDATE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.BUDGET_UPDATE_SUCCESS));
     }
 
-    @Operation(operationId = "03-soft-delete-budget", summary = "✅ 예산 삭제(soft)", responses = {
-            @ApiResponse(responseCode = "200")
-    })
-    @Tag(name = "Budgets")
+    @Operation(summary = "✅ 예산 삭제(soft)", description = "예산 삭제(soft)")
     @DeleteMapping("/soft-delete/{budgetId}")
-    public ResponseEntity<?> budgetSoftDelete_endpoint(@PathVariable Long budgetId) {
+    public ResponseEntity<?> budgetSoftDelete_endpoint(
+            @PathVariable Long budgetId) {
+
         budgetService.budgetSoftDelete(budgetId);
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
+        return ResponseEntity
+                .status(BaseResponseStatus.BUDGET_DELETE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.BUDGET_DELETE_SUCCESS));
     }
 
-    @Operation(operationId = "04-hard-delete-budget", summary = "✅ 예산 삭제(hard)", responses = {
-            @ApiResponse(responseCode = "200")
-    })
-    @Tag(name = "Budgets")
+    @Operation(summary = "✅ 예산 삭제(hard)", description = "예산 삭제(hard)")
     @DeleteMapping("/hard-delete/{budgetId}")
-    public ResponseEntity<?> budgetHardDelete_endpoint(@PathVariable Long budgetId) {
+    public ResponseEntity<?> budgetHardDelete_endpoint(
+            @PathVariable Long budgetId) {
+
         budgetService.budgetHardDelete(budgetId);
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 삭제에 성공했습니다."));
+        return ResponseEntity
+                .status(BaseResponseStatus.BUDGET_DELETE_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.BUDGET_DELETE_SUCCESS));
     }
-    @Operation(summary = "Budget 추천 API", responses = {
-            @ApiResponse(responseCode = "200")
-    })
-    @Tag(name = "Budgets")
+
+    @Operation(summary = "✅ 예산 추천", description = "예산 추천")
     @GetMapping("/recommend")
-    public ResponseEntity<?> budgetRecommend(@RequestParam long totalAmount) {
-        BudgetRecommendListResponse budgetRecommendListResponse = budgetService.budgetRecommend(totalAmount);
+    public ResponseEntity<?> budgetRecommend(@RequestParam Long totalAmount) {
 
-        return ResponseEntity.ok().body(new BaseResponse<>(200, "예산 추천에 성공했습니다.", budgetRecommendListResponse));
+        BudgetRecommendListResponse response = budgetService.budgetRecommend(totalAmount);
+
+        return ResponseEntity
+                .status(BaseResponseStatus.BUDGET_RECOMMEND_SUCCESS.getStatus())
+                .body(BaseResponse.of(BaseResponseStatus.BUDGET_RECOMMEND_SUCCESS, response));
     }
-
 }

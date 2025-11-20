@@ -38,3 +38,7 @@ out/
 
 ### env file ###
 .env
+
+### sql ###
+/src/main/resources/data.sql
+/src/main/resources/db/migration/**

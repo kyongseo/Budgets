@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,9 +19,9 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure,Long> {
 
     // 목록 조회
     @Query("""
-        select new ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureList(
-            e.memo, e.period, e.category, e.excludingTotal, e.money
-        )
+            select new ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureList(
+                e.memo, e.period, e.category, e.excludingTotal, e.money
+            )
         from Expenditure e
         where e.category = :category
           and e.period between :minPeriod and :maxPeriod
@@ -32,8 +33,8 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure,Long> {
             @Param("maxPeriod") LocalDate maxPeriod,
             @Param("category") BudgetCategory category,
             @Param("user") User user,
-            @Param("minMoney") long minMoney,
-            @Param("maxMoney") long maxMoney
+            @Param("minMoney") BigDecimal minMoney,
+            @Param("maxMoney") BigDecimal  maxMoney
     );
 
     // 합계(뷰 범위) — SUM(long) ⇒ Long, COALESCE 0L
@@ -51,8 +52,8 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure,Long> {
             @Param("maxPeriod") LocalDate maxPeriod,
             @Param("category") BudgetCategory category,
             @Param("user") User user,
-            @Param("minMoney") long minMoney,
-            @Param("maxMoney") long maxMoney
+            @Param("minMoney") BigDecimal minMoney,
+            @Param("maxMoney") BigDecimal maxMoney
     );
 
     // 3) 카테고리별 총합(전체): ifNull -> COALESCE, 별칭 추가
@@ -70,23 +71,23 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure,Long> {
 
     // 4) 가이드: round/서브쿼리 이슈 -> FUNCTION 사용(Hibernate) 또는 네이티브/서비스단 분리
     @Query("""
-        select new ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureGuide(
-            a.category,
-            sum(a.money),
-            COALESCE((
-                select (sum(b.money) * 1.0) / :period
-                from Budget b
-                where b.period = :start
-                  and b.user = :user
-                  and b.category = a.category
-            ), 0.0),
-            '0%'
-        )
-        from Expenditure a
-        where a.user = :user
-          and a.period = :today
-        group by a.category
-        """)
+    select new ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureGuide(
+        a.category,
+        sum(a.money),
+        COALESCE((
+            select sum(b.money) / :period
+            from Budget b
+            where b.period = :start
+              and b.user = :user
+              and b.category = a.category
+        ), 0),
+        '0%'
+    )
+    from Expenditure a
+    where a.user = :user
+      and a.period = :today
+    group by a.category
+    """)
     List<ExpenditureGuide> findByExpenditureAmount(
             @Param("user") User user,
             @Param("start") LocalDate start,

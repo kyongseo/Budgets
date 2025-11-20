@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>💬 Chat </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f5f7;
+            display: flex;
+            justify-content: center;
+            padding-top: 40px;
+        }
+        .chat-container {
+            width: 420px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        #messages {
+            border: 1px solid #ddd;
+            background: #fafafa;
+            padding: 10px;
+            width: 100%;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+        .msg { margin-bottom: 8px; display: flex; flex-direction: column; }
+        .msg.you { align-items: flex-end; }
+        .msg.you .bubble { background: #d1f2ff; align-self: flex-end; }
+        .msg.other { align-items: flex-start; }
+        .msg.other .bubble { background: #eee; align-self: flex-start; }
+        .bubble {
+            padding: 8px 12px;
+            border-radius: 6px;
+            max-width: 260px;
+            word-wrap: break-word;
+        }
+        .sender { font-size: 11px; margin-bottom: 2px; color: #555; }
+
+        /* ✅ 시스템 안내문 스타일 */
+        .system-message {
+            text-align: center;
+            color: #777;
+            font-size: 13px;
+            margin: 6px 0;
+        }
+
+        .top-area input { width: 80px; }
+        .message-input { width: 75%; padding: 5px; }
+    </style>
+
+    <script th:inline="javascript">
+        const username = /*[[${username}]]*/ "익명";
+        console.log("✅ 로그인 사용자:", username);
+    </script>
+</head>
+
+<body>
+<div class="chat-container">
+    <h3>💬 재무 톡 </h3>
+    <p><strong>👤 현재 사용자:</strong> <span id="currentUser" th:text="${username}">익명</span></p>
+
+    <div class="top-area">
+        <label>채팅방 ID:</label>
+        <input type="text" id="roomId" value="1" />
+        <button onclick="connect()">연결</button>
+        <button onclick="disconnect()">해제</button>
+    </div>
+
+    <div style="margin-top:10px;">
+        <input type="text" id="messageInput" class="message-input"
+               placeholder="메시지를 입력하세요"
+               onkeypress="if(event.key==='Enter') sendMessage()" />
+        <button onclick="sendMessage()">전송</button>
+    </div>
+
+    <div id="messages"></div>
+</div>
+
+<script>
+    let socket = null;
+    let currentRoom = null;
+
+    function appendMessage(sender, message) {
+        const box = document.getElementById("messages");
+        const isSystem = sender === "SYSTEM";
+        const isYou = sender === username;
+
+        let formatted;
+        if (isSystem) {
+            // ✅ 시스템 안내문은 말풍선 대신 중앙 회색 안내문으로 표시
+            formatted = `<div class="system-message">🛈 ${message}</div>`;
+        } else {
+            formatted = `
+                <div class="msg ${isYou ? 'you' : 'other'}">
+                    <div class="sender">${sender}</div>
+                    <div class="bubble">${message}</div>
+                </div>`;
+        }
+
+        box.innerHTML += formatted;
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function connect() {
+        const roomId = document.getElementById("roomId").value.trim();
+        if (!roomId) return alert("채팅방 번호를 입력하세요.");
+        currentRoom = roomId;
+
+        const wsUrl = `ws://localhost:9091/chat/${roomId}`;
+        console.log("🔌 연결 시도:", wsUrl);
+
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+            console.log("✅ WebSocket 연결 성공");
+            appendMessage("SYSTEM", `채팅방 ${roomId}에 입장했습니다.`);
+        };
+
+        socket.onmessage = (event) => {
+            console.log("📩 메시지 수신:", event.data);
+            const payload = JSON.parse(event.data);
+            appendMessage(payload.sender, payload.message);
+        };
+
+        socket.onclose = (event) => {
+            console.log("❎ 연결 종료", event);
+            appendMessage("SYSTEM", "연결이 종료되었습니다.");
+        };
+
+        socket.onerror = (error) => {
+            console.error("❌ WebSocket 에러:", error);
+        };
+    }
+
+    function sendMessage() {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            return alert("서버에 연결되어 있지 않습니다.");
+        }
+        const message = document.getElementById("messageInput").value.trim();
+        if (!message) return;
+
+        const payload = {
+            roomId: currentRoom,
+            sender: username,
+            message: message
+        };
+
+        console.log("📤 메시지 전송:", payload);
+        socket.send(JSON.stringify(payload));
+        document.getElementById("messageInput").value = "";
+    }
+
+    function disconnect() {
+        if (socket) {
+            socket.close();
+            socket = null;
+        }
+        appendMessage("SYSTEM", "연결이 해제되었습니다.");
+        console.log("연결 해제 완료");
+    }
+</script>
+</body>
+</html>

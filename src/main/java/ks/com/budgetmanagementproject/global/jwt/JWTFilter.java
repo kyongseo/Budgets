@@ -8,10 +8,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
+import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
+import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
+import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,20 +21,30 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
-public class JWTFilter extends OncePerRequestFilter {
+@AllArgsConstructor
+public class  JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
     private final RoleRepository roleRepository;
-
-    public JWTFilter(JWTUtil jwtUtil, RoleRepository roleRepository) {
-        this.jwtUtil = jwtUtil;
-        this.roleRepository = roleRepository;
-    }
+    private final RefreshRepository refreshRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        if (path.startsWith("/chat")
+                || path.endsWith(".html")
+                || path.endsWith(".js")
+                || path.endsWith(".css")
+                || path.endsWith(".ico")
+                || path.startsWith("/static/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String accessToken = resolveAccessToken(request);
 
@@ -40,40 +52,56 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
         accessToken = accessToken.trim();
 
         try {
             jwtUtil.isExpired(accessToken);
+            setAuthentication(accessToken);
+            filterChain.doFilter(request, response);
+            return;
         } catch (ExpiredJwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().print("access token expired");
+            String refreshToken = resolveRefreshToken(request);
+
+            if (refreshToken == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().print("access token expired");
+                return;
+            }
+
+            try {
+                jwtUtil.isExpired(refreshToken);
+            } catch (ExpiredJwtException ex) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().print("refresh token expired");
+                return;
+            }
+
+            Optional<RefreshToken> refreshEntity = refreshRepository.findByRefresh(refreshToken);
+            if (refreshEntity.isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().print("invalid refresh token");
+                return;
+            }
+
+            String username = jwtUtil.getUsername(refreshToken);
+            List<String> roles = Arrays.stream(jwtUtil.getRole(refreshToken).split(",")).toList();
+            Long userId = jwtUtil.getUserId(refreshToken);
+
+            String newAccessToken = jwtUtil.createAccessToken(
+                    userId, username, roles, JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT
+            );
+
+            Cookie newAccessCookie = new Cookie("accessToken", newAccessToken);
+            newAccessCookie.setHttpOnly(true);
+            newAccessCookie.setPath("/");
+            newAccessCookie.setMaxAge(Math.toIntExact(JWTUtil.ACCESS_TOKEN_EXPIRE_COUNT / 1000));
+            response.addCookie(newAccessCookie);
+
+            setAuthentication(newAccessToken);
+            filterChain.doFilter(request, response);
             return;
         }
-
-        String category = jwtUtil.getCategory(accessToken);
-        if (!"accessToken".equals(category)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().print("invalid access token");
-            return;
-        }
-
-        String username = jwtUtil.getUsername(accessToken);
-        List<Role> roles = Arrays.stream(jwtUtil.getRole(accessToken).trim().split(","))
-                .map(roleRepository::findByName)
-                .map(opt -> opt.orElseThrow(() -> new RuntimeException("Role not found")))
-                .toList();
-
-        User user = User.builder()
-                .username(username)
-                .roles(new HashSet<>(roles))
-                .build();
-
-        CustomUserDetails customUserDetails = new CustomUserDetails(user);
-        Authentication authToken = new UsernamePasswordAuthenticationToken(
-                customUserDetails, null, customUserDetails.getAuthorities());
-
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-        filterChain.doFilter(request, response);
     }
 
     private String resolveAccessToken(HttpServletRequest request) {
@@ -90,5 +118,47 @@ public class JWTFilter extends OncePerRequestFilter {
             }
         }
         return null;
+    }
+
+    private String resolveRefreshToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private void setAuthentication(String accessToken) {
+        String username = jwtUtil.getUsername(accessToken);
+        Long userId = jwtUtil.getUserId(accessToken);
+
+        List<Role> roles = Arrays.stream(jwtUtil.getRole(accessToken).trim().split(","))
+                .map(roleRepository::findByName)
+                .map(opt -> opt.orElseThrow(() -> new RuntimeException("Role not found")))
+                .toList();
+
+        User user = User.builder()
+                .id(userId)
+                .username(username)
+                .roles(new HashSet<>(roles))
+                .build();
+
+        CustomUserDetails customUserDetails = new CustomUserDetails(user);
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(
+                        customUserDetails,
+                        null,
+                        customUserDetails.getAuthorities()
+        );
+        SecurityContextHolder.getContext().setAuthentication(authToken);
     }
 }
