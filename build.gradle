@@ -77,7 +77,11 @@ tasks.named('test') {
 
 test {
     useJUnitPlatform()
-    finalizedBy jacocoTestReport  // 테스트 후 자동으로 리포트 생성
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = "0.8.11"
 }
 
 jacocoTestReport {
@@ -101,11 +105,17 @@ jacocoTestReport {
 }
 
 jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+
     violationRules {
         rule {
             limit {
-                minimum = 0.70  // 최소 70% 커버리지 요구
+                minimum = 0.80
             }
         }
     }
+}
+
+check {
+    dependsOn jacocoTestCoverageVerification
 }
