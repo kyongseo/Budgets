@@ -115,7 +115,7 @@ public class ExpenditureController {
                 .body(BaseResponse.of(BaseResponseStatus.EXPENDITURE_EXCEPT_UPDATE_SUCCESS));
     }
 
-    @Operation(summary = "✅ 지출 추천", description = "지출 추천")
+    @Operation(summary = "✅ 지출 추천", description = "사용자의 예산과 남은 기간을 고려하여 오늘 적정 지출 금액을 카테고리별로 추천합니다.")
     @GetMapping("/recommend")
     public ResponseEntity<?> expenditureRecommend(
             @AuthenticationPrincipal User user) {
@@ -127,7 +127,7 @@ public class ExpenditureController {
                 .body(BaseResponse.of(BaseResponseStatus.EXPENDITURE_RECOMMEND_SUCCESS, response));
     }
 
-    @Operation(summary = "✅ 지출 안내", description = "지출 안내")
+    @Operation(summary = "✅ 지출 안내", description = "오늘 사용한 지출과 적정 금액을 비교하여 분석 결과를 제공합니다.")
     @GetMapping("/guide")
     public ResponseEntity<?> expenditureGuide(
             @AuthenticationPrincipal User user) {
