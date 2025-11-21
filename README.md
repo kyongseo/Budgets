@@ -124,7 +124,7 @@ ETC: ![Static Badge](https://img.shields.io/badge/SpringSecurity-pink)
 
 - 커버리지 목표 
   - 전체 라인 커버리지: 70% 이상 
-  - 핵심 도메인 (Service): 90% 이상
+  - 핵심 도메인 (Service): 80% 이상
 
 ---
 ## ⚙️ 환경 설정
@@ -159,7 +159,7 @@ JWT_SECRET=${JWT_SECRET}
 ### 실행 방법
 ```bash
 # 1. 환경 변수 설정
-cp .env.example .env
+make service-build
 # .env 파일 수정
 
 # 2. 데이터베이스 마이그레이션
