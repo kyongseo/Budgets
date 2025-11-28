@@ -39,9 +39,6 @@ public class BudgetService {
         BudgetCategory budgets = categoryRepository.findByName(request.getCategoryName())
                 .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_CATEGORY));
 
-//        Budget existingBudget = budgetRepository.findByCategoryAndPeriodAndUser(
-//                budgets, LocalDate.from(request.getPeriod()), user);
-
         LocalDate period = request.getPeriod().atDay(1);
 
         Budget existingBudget = budgetRepository.findByCategoryAndPeriodAndUser(
@@ -111,20 +108,16 @@ public class BudgetService {
      */
     @Transactional(readOnly = true)
     public BudgetRecommendListResponse budgetRecommend(Long totalAmount) {
-        // 1. 모든 예산 데이터 조회 (카테고리 정보 포함) - N+1 방지
         List<Budget> allBudgets = budgetRepository.findAllWithCategory();
 
-        // 2. 예산 데이터가 없는 경우 빈 리스트 반환
         if (allBudgets.isEmpty()) {
             return BudgetRecommendListResponse.from(Collections.emptyList());
         }
 
-        // 3. 전체 예산 합계 계산
         BigDecimal totalBudgetSum = allBudgets.stream()
                 .map(Budget::getMoney)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 4. 카테고리별로 그룹화하고 합계 계산
         Map<BudgetCategory, BigDecimal> categorySum = allBudgets.stream()
                 .collect(Collectors.groupingBy(
                         Budget::getCategory,
@@ -135,13 +128,11 @@ public class BudgetService {
                         )
                 ));
 
-        // 5. 카테고리별 추천 금액 계산
         List<BudgetRecommendResponse> responseList = categorySum.entrySet().stream()
                 .map(entry -> {
                     BudgetCategory category = entry.getKey();
                     BigDecimal categoryMoney = entry.getValue();
 
-                    // 비율 계산: (카테고리 금액 / 전체 금액) * 사용자 총 예산
                     BigDecimal ratio = categoryMoney.divide(totalBudgetSum, 10, RoundingMode.HALF_UP);
                     long recommendedAmount = BigDecimal.valueOf(totalAmount)
                             .multiply(ratio)

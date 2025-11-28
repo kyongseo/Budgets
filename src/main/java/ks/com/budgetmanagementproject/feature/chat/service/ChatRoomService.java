@@ -81,6 +81,7 @@ public class ChatRoomService {
 
         return ChatRoomResponse.from(chatRoom);
     }
+
     /**
      * 채팅방 입장
      * @param roomId 방번호

@@ -31,9 +31,6 @@ public class ExpenditureService {
 
     /**
      * 지출 생성
-     * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외처리하고,
-     * request에서 받은 값들을 저장하고,
-     * 지정된 카테고리 예산에서 마이너스 해준다.
      * @param request money, memo, category, period
      * @param user 사용자
      */
@@ -63,10 +60,6 @@ public class ExpenditureService {
 
     /**
      * 지출 수정
-     * money, memo, category, period을 수정한다.
-     * request에서 받은 categoryName으로 카테고리를 조회 후 존재하지 않은 카테고리면 예외 발생
-     * 존재하지 않는 expenditureId가 들어오면 예외 발생,
-     * 수정할 지출의 유저와 다를경우 예외 발생
      * @param expenditureId 지출 아이디
      * @param request money, memo, category, period
      * @param user 사용지
@@ -128,8 +121,8 @@ public class ExpenditureService {
      */
     @Transactional(readOnly = true)
     public ExpenditureDetailResponse expenditureDetail(Long expenditureId, User user) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(()
-                -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
@@ -140,15 +133,12 @@ public class ExpenditureService {
 
     /**
      * 지출 Soft 삭제
-     * expenditureId로 지출을 삭제한다.
-     * 존재하지 않는 expenditureId가 들어오면 예외 발생,
-     * 삭제할 지출의 유저와 다를경우 예외 발생
      * @param expenditureId 지출 아이디
      * @param user 사용자
      */
     public void expenditureSoftDelete(Long expenditureId, User user) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(()
-                -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
@@ -160,14 +150,13 @@ public class ExpenditureService {
 
     /**
      * 지출 Hard 삭제
-     * expenditureId로 지출을 삭제한다.
      * @param expenditureId 지출 아이디
      * @param user 사용자
      */
     @Transactional
     public void expenditureHardDelete(Long expenditureId, User user) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(()
-                -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
 
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
@@ -201,8 +190,6 @@ public class ExpenditureService {
 
     /**
      * 지출 추천
-     * 오늘 날짜, 이번 달 마지막 날짜로 이번 달 남은 날의 기간을 구해 오늘 지출 금액을 추천한다.
-     * 예산이 초과된 카테고리의 최소 금액은 20,000원으로 설정.
      * @param user 사용자
      * @return response
      */
@@ -220,18 +207,12 @@ public class ExpenditureService {
 
         for (ExpenditureRecommend recommend : recommendList) {
             if (recommend.getTodayExpenditurePossibleMoney() <= 0) {
-                /* 예산 초과시 최소 지출 가능 금액 20,000으로 설정. */
                 recommend.setTodayExpenditurePossibleMoney(20000L);
-                /* 예산을 초과한 카테고리 이름을 message에 저장 */
                 message.append(recommend.getCategory().getName()).append(",");
             }
             todayExpenditurePossibleTotal += recommend.getTodayExpenditurePossibleMoney();
         }
 
-        /*
-         * 이번 달에 예산을 초과한 카테고리가 하나도 없다면 첫 번째 message 출력하고
-         * 이번 달에 예산을 초과한 카테고리가 하나라도 있으면 위 예산을 초과한 카테고리 이름 + 두 번째 message를 출력한다.
-         */
         if (message.toString().equals("이번 달 ")) {
             message = new StringBuilder("절약을 잘 실천하고 계시네요! 앞으로 남은 날도 절약을 위해 화이팅!");
         } else {
@@ -244,9 +225,6 @@ public class ExpenditureService {
 
     /**
      * 지출 안내
-     * 오늘 날짜로 오늘 사용한 카테고리별 지출 금액, 총 지출 금액을 구하고
-     * 오늘 날짜, 이번 달 마지막 날짜로 이번 달 남은 날의 기간을 구해 오늘 사용했으면 적절한 금액을 구한다.
-     * 예산이 초과된 카테고리의 최소 금액은 20,000원으로 설정.
      * @param user 사용자
      * @return response
      */
@@ -262,15 +240,12 @@ public class ExpenditureService {
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (ExpenditureGuide expenditureGuide : list) {
-            // 적정 지출 금액이 0 이하면 기본값 20,000원 설정
             if (expenditureGuide.getTodayAppropriateExpenditureAmount().compareTo(BigDecimal.ZERO) <= 0) {
                 expenditureGuide.setTodayAppropriateExpenditureAmount(BigDecimal.valueOf(20000));
             }
 
-            // 총 지출 금액 누적
             totalAmount = totalAmount.add(expenditureGuide.getTodayExpenditureAmount());
 
-            // 위험도 계산 (오늘 지출 / 적정 지출 * 100)
             BigDecimal risk = expenditureGuide.getTodayExpenditureAmount()
                     .multiply(BigDecimal.valueOf(100))
                     .divide(expenditureGuide.getTodayAppropriateExpenditureAmount(), 0, RoundingMode.HALF_UP);
