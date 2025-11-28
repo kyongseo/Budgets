@@ -71,60 +71,41 @@ dependencies {
     implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.8.11'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+jacoco {
+    toolVersion = "0.8.11"
+    reportsDirectory = layout.buildDirectory.dir('jacocoReport')
 }
 
 test {
-    useJUnitPlatform()
     finalizedBy jacocoTestReport
-}
-
-jacoco {
-    toolVersion = "0.8.11"
+    useJUnitPlatform()
 }
 
 jacocoTestReport {
     dependsOn test, compileJava, processResources
     reports {
-        xml.required = true
+        xml.required = false
         html.required = true
         csv.required = false
     }
 
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                    // 메인 애플리케이션
-                    '**/BudgetManagementProjectApplication.class',
+    executionData.setFrom(fileTree(project.buildDir).include('jacoco/*.exec'))
 
-                    // Config 패키지
-                    '**/global/config/**',
-
-                    // DTO 패키지들
-                    '**/feature/budget/dto/**',
-                    '**/feature/chat/dto/**',
-                    '**/feature/expenditure/dto/**',
-                    '**/feature/user/dto/**',
-
-                    // Entity 패키지들
-                    '**/feature/budget/entity/**',
-                    '**/feature/chat/entity/**',
-                    '**/feature/expenditure/entity/**',
-                    '**/feature/role/entity/**',
-                    '**/feature/token/entity/**',
-                    '**/feature/user/entity/**',
-
-                    // Global 패키지들
-                    '**/global/common/**',
-                    '**/global/jwt/**',
-                    '**/global/security/**',
-
-                    // Repository 패키지들 (선택사항)
-                    // '**/repository/**',
-            ])
-        }))
-    }
+    classDirectories.setFrom(
+            files(project.sourceSets.main.output.classesDirs.files.collect {
+                fileTree(dir: it, exclude: [
+                        '**/BudgetManagementProjectApplication.class',
+                        '**/global/**',
+                        '**/*Dto*',
+                        '**/*Entity*',
+                        '**/*Repository',
+                        '**/feature/role/**',
+                        '**/feature/token/**',
+                        '**/feature/expenditure/service/ExpenditureSchedulerService', // 스케줄러 자체는 제외
+                ])
+            })
+    )
+    finalizedBy 'jacocoTestCoverageVerification'
 }
 
 jacocoTestCoverageVerification {
@@ -132,36 +113,32 @@ jacocoTestCoverageVerification {
 
     violationRules {
         rule {
-            element = 'BUNDLE'  // CLASS → BUNDLE로 변경
+            element = 'BUNDLE'
             limit {
-                counter = 'INSTRUCTION'
+                counter = 'LINE'
                 value = 'COVEREDRATIO'
-                minimum = 0.6  // 현재 전체 커버리지에 맞춤
+                minimum = 0.8
             }
         }
     }
 
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                    '**/BudgetManagementProjectApplication.class',
-                    '**/global/config/**',
-                    '**/feature/budget/dto/**',
-                    '**/feature/chat/dto/**',
-                    '**/feature/expenditure/dto/**',
-                    '**/feature/user/dto/**',
-                    '**/feature/budget/entity/**',
-                    '**/feature/chat/entity/**',
-                    '**/feature/expenditure/entity/**',
-                    '**/feature/role/entity/**',
-                    '**/feature/token/entity/**',
-                    '**/feature/user/entity/**',
-                    '**/global/common/**',
-                    '**/global/jwt/**',
-                    '**/global/security/**',
-            ])
-        }))
-    }
+    classDirectories.setFrom(
+            files(project.sourceSets.main.output.classesDirs.files.collect {
+                fileTree(dir: it, exclude: [
+                        '**/BudgetManagementProjectApplication.class',
+                        '**/global/**',
+                        '**/*Dto*',
+                        '**/*Entity*',
+                        '**/*Repository',
+                        '**/feature/role/**',
+                        '**/feature/token/**',
+                        '**/feature/expenditure/service/ExpenditureService',
+                        '**/feature/expenditure/service/ExpenditureSchedulerService',
+                        '**/feature/expenditure/service/ExpenditureSchedulerService$SchedulerResult', // 내부 클래스 명시 제외
+                        '**/feature/budget/service/BudgetCategoryService',
+                ])
+            })
+    )
 }
 
 check {

@@ -1,4 +1,17 @@
 spring:
-  task:
-    scheduling:
-      enabled: false
+  jpa:
+    show-sql: true
+    database: postgresql
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: never
+logging:
+  level:
+    ks.com.budgetmanagementproject: DEBUG
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN
