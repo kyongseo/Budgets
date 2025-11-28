@@ -38,15 +38,6 @@ public class JWTUtil {
                 .getBody();
     }
 
-    public Claims parseAccessToken(String accessToken) {
-        return extractClaims(accessToken);
-    }
-
-    public String getUsernameFromToken(String token) {
-        Claims claims = extractClaims(token);
-        return claims.getSubject();
-    }
-
     public String getAccessTokenFromCookies(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -69,10 +60,6 @@ public class JWTUtil {
 
     public String getRole(String token) {
         return extractClaims(token).get("role", String.class);
-    }
-
-    public String getCategory(String token) {
-        return extractClaims(token).get("category", String.class);
     }
 
     public void isExpired(String token) {
