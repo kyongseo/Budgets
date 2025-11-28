@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
 @Getter
-@Setter
+@Setter @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SignUpRequest {

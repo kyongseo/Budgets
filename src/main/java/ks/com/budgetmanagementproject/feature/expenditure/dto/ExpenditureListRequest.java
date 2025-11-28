@@ -4,21 +4,25 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Getter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpenditureListRequest {
 
     @NotNull(message = "시작 날짜는 필수입니다.")
     @PastOrPresent(message = "시작 날짜는 과거 또는 현재 날짜여야 합니다.")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate minPeriod;
 
     @NotNull(message = "종료 날짜는 필수입니다.")
     @PastOrPresent(message = "종료 날짜는 과거 또는 현재 날짜여야 합니다.")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate maxPeriod;
 
     @Size(max = 50, message = "카테고리명은 50자를 초과할 수 없습니다.")
