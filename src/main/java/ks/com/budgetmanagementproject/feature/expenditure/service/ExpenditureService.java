@@ -36,7 +36,8 @@ public class ExpenditureService {
      */
     @Transactional
     public void expenditureCreate(ExpenditureCreateRequest request, User user) {
-        BudgetCategory category = categoryRepository.findByName(request.getCategoryName()).orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
+        BudgetCategory category = categoryRepository.findByName(request.getCategoryName())
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
         Expenditure expenditure = Expenditure.builder()
                 .money(request.getMoney())
                 .memo(request.getMemo())
@@ -66,7 +67,8 @@ public class ExpenditureService {
      */
     @Transactional
     public void expenditureUpdate(Long expenditureId, ExpenditureUpdateRequest request, User user) {
-        Expenditure expenditure = expenditureRepository.findById(expenditureId).orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
+        Expenditure expenditure = expenditureRepository.findById(expenditureId)
+                .orElseThrow(() -> new BaseException(NON_EXISTENT_EXPENDITURE));
         BudgetCategory category = categoryRepository.findByName(request.getCategoryName()).orElseThrow(() -> new BaseException(NON_EXISTENT_CATEGORY));
         if (!expenditure.getUser().getId().equals(user.getId())) {
             throw new BaseException(FORBIDDEN_USER);
