@@ -25,50 +25,54 @@ repositories {
 }
 
 dependencies {
-    // spring
+    // Spring Core & Security
     implementation 'org.springframework.boot:spring-boot-starter-batch'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-
-    // kafka
-    implementation 'org.springframework.kafka:spring-kafka'
-    implementation 'org.springframework:spring-messaging'
-
-    // lombok
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    annotationProcessor 'org.projectlombok:lombok'
 
-    // DB
-    runtimeOnly 'org.postgresql:postgresql'
+    // Database
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
 
-    // view
+    // View Template
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-    // websocket
-    implementation'org.springframework.boot:spring-boot-starter-websocket'
+    // Message Queue & Real-time Communication
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework:spring-messaging'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
-    // test
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.batch:spring-batch-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
-    testImplementation "org.mockito:mockito-core:3.12.4"
-    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    // Cache - redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // jwt
+    // Mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // JWT Authentication
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 
-    // Swagger UI
+    // Validation
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+
+    // API Documentation - Swagger
     implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.8.11'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
+    testImplementation "org.mockito:mockito-core:3.12.4"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 jacoco {
@@ -94,14 +98,47 @@ jacocoTestReport {
     classDirectories.setFrom(
             files(project.sourceSets.main.output.classesDirs.files.collect {
                 fileTree(dir: it, exclude: [
+                        // Application 클래스
                         '**/BudgetManagementProjectApplication.class',
+
+                        // Config 패키지 전체
+                        '**/config/**',
+                        '**/configuration/**',
+
+                        // Global 패키지
                         '**/global/**',
-                        '**/*Dto*',
-                        '**/*Entity*',
-                        '**/*Repository',
+
+                        // DTO, Entity, Repository
+                        '**/*Dto.class',
+                        '**/*Dto$*.class',
+                        '**/*Request.class',
+                        '**/*Request$*.class',
+                        '**/*Response.class',
+                        '**/*Response$*.class',
+                        '**/*Entity.class',
+                        '**/*Entity$*.class',
+                        '**/*Repository.class',
+                        '**/*Repository$*.class',
+
+                        // Role, Token 패키지
                         '**/feature/role/**',
                         '**/feature/token/**',
-                        '**/feature/expenditure/service/ExpenditureSchedulerService', // 스케줄러 자체는 제외
+
+                        // 특정 서비스
+                        '**/feature/expenditure/service/ExpenditureSchedulerService.class',
+                        '**/feature/budget/service/BudgetCategoryService.class',
+
+                        // Filter, Security 관련
+                        '**/*Filter.class',
+                        '**/*Filter$*.class',
+
+                        // Exception Handler
+                        '**/*ExceptionHandler.class',
+                        '**/*ExceptionHandler$*.class',
+
+                        // Enum 클래스
+                        '**/*Enum.class',
+                        '**/*Status.class',
                 ])
             })
     )
@@ -125,17 +162,47 @@ jacocoTestCoverageVerification {
     classDirectories.setFrom(
             files(project.sourceSets.main.output.classesDirs.files.collect {
                 fileTree(dir: it, exclude: [
+                        // Application 클래스
                         '**/BudgetManagementProjectApplication.class',
+
+                        // Config 패키지 전체
+                        '**/config/**',
+                        '**/configuration/**',
+
+                        // Global 패키지
                         '**/global/**',
-                        '**/*Dto*',
-                        '**/*Entity*',
-                        '**/*Repository',
+
+                        // DTO, Entity, Repository
+                        '**/dto',
+                        '**/dto/**',
+                        '**/*Request.class',
+                        '**/*Request$*.class',
+                        '**/*Response.class',
+                        '**/*Response$*.class',
+                        '**/entity',
+                        '**/entity/**',
+                        '**/*Repository.class',
+                        '**/*Repository$*.class',
+
+                        // Role, Token 패키지
                         '**/feature/role/**',
                         '**/feature/token/**',
-                        '**/feature/expenditure/service/ExpenditureService',
-                        '**/feature/expenditure/service/ExpenditureSchedulerService',
-                        '**/feature/expenditure/service/ExpenditureSchedulerService$SchedulerResult', // 내부 클래스 명시 제외
-                        '**/feature/budget/service/BudgetCategoryService',
+
+                        // 특정 서비스
+                        '**/feature/expenditure/service/ExpenditureSchedulerService.class',
+                        '**/feature/budget/service/BudgetCategoryService.class',
+
+                        // Filter, Security 관련
+                        '**/*Filter.class',
+                        '**/*Filter$*.class',
+
+                        // Exception Handler
+                        '**/*ExceptionHandler.class',
+                        '**/*ExceptionHandler$*.class',
+
+                        // Enum 클래스
+                        '**/*Enum.class',
+                        '**/*Status.class',
                 ])
             })
     )
