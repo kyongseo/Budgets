@@ -1,7 +1,8 @@
 package ks.com.budgetmanagementproject.global.config;
 
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.token.service.RedisBlackTokenService;
+import ks.com.budgetmanagementproject.feature.token.service.RedisRefreshTokenService;
 import ks.com.budgetmanagementproject.global.jwt.JWTFilter;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import ks.com.budgetmanagementproject.global.jwt.LoginFilter;
@@ -28,16 +29,11 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    //    private final RefreshRepository refreshRepository;
     private final RoleRepository roleRepository;
+    private final RedisRefreshTokenService redisRefreshTokenService;
+    private final RedisBlackTokenService redisBlackTokenService;
 
-
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil, RefreshRepository refreshRepository, RoleRepository roleRepository) {
-        this.authenticationConfiguration = authenticationConfiguration;
-        this.jwtUtil = jwtUtil;
-        this.refreshRepository = refreshRepository;
-        this.roleRepository = roleRepository;
-    }
 
     String[] allAllowPage = new String[] {
             "/", "/chat.html", "/favicon.ico",
@@ -56,6 +52,14 @@ public class SecurityConfig {
             "/v3/api-docs/**"
     };
 
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil, RoleRepository roleRepository, RedisRefreshTokenService redisRefreshTokenService, RedisBlackTokenService redisBlackTokenService) {
+        this.authenticationConfiguration = authenticationConfiguration;
+        this.jwtUtil = jwtUtil;
+        this.roleRepository = roleRepository;
+        this.redisRefreshTokenService = redisRefreshTokenService;
+        this.redisBlackTokenService = redisBlackTokenService;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -67,8 +71,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new JWTFilter(jwtUtil, roleRepository, refreshRepository), LoginFilter.class)
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JWTFilter(jwtUtil, roleRepository, redisRefreshTokenService, redisBlackTokenService), LoginFilter.class)
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, redisRefreshTokenService), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(corsCustomizer -> corsCustomizer.configurationSource((CorsConfigurationSource) request -> {
 

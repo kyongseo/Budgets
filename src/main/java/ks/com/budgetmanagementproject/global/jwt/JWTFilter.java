@@ -8,8 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.token.service.RedisBlackTokenService;
+import ks.com.budgetmanagementproject.feature.token.service.RedisRefreshTokenService;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.AllArgsConstructor;
@@ -21,14 +21,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 @AllArgsConstructor
 public class  JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
     private final RoleRepository roleRepository;
-    private final RefreshRepository refreshRepository;
+    private final RedisRefreshTokenService redisRefreshTokenService;
+    private final RedisBlackTokenService redisBlackTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -55,6 +55,11 @@ public class  JWTFilter extends OncePerRequestFilter {
 
         accessToken = accessToken.trim();
 
+        if (redisBlackTokenService.isTokenBlacklisted(accessToken)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
         try {
             jwtUtil.isExpired(accessToken);
             setAuthentication(accessToken);
@@ -65,22 +70,25 @@ public class  JWTFilter extends OncePerRequestFilter {
 
             if (refreshToken == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().print("access token expired");
+                return;
+            }
+
+            if (!redisRefreshTokenService.isRefreshTokenValid(refreshToken)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
 
             try {
                 jwtUtil.isExpired(refreshToken);
             } catch (ExpiredJwtException ex) {
+                redisRefreshTokenService.deleteRefreshToken(refreshToken);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().print("refresh token expired");
                 return;
             }
 
-            Optional<RefreshToken> refreshEntity = refreshRepository.findByRefresh(refreshToken);
-            if (refreshEntity.isEmpty()) {
+            String refreshEntity = redisRefreshTokenService.getUsernameByRefreshToken(refreshToken);
+            if (refreshEntity == null || refreshEntity.isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().print("invalid refresh token");
                 return;
             }
 

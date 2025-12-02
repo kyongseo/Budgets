@@ -7,7 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.token.service.RedisBlackTokenService;
+import ks.com.budgetmanagementproject.feature.token.service.RedisRefreshTokenService;
 import ks.com.budgetmanagementproject.feature.user.dto.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
@@ -34,7 +35,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final RedisRefreshTokenService redisRefreshTokenService;
+    private final RedisBlackTokenService redisBlackTokenService;
 
     /**
      * 회원가입
@@ -87,7 +89,9 @@ public class UserService {
                 .expiresAt(System.currentTimeMillis() + JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT)
                 .build();
 
-        refreshRepository.save(rt);
+        redisRefreshTokenService.addRefreshToken(refreshToken, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
+
+        // refreshRepository.save(rt);
 
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);
@@ -176,9 +180,14 @@ public class UserService {
 
         if (accessToken != null) {
             deleteCookie(response, "accessToken");
+            long remainingTime = jwtUtil.getExpiration(accessToken) - System.currentTimeMillis();
+            if (remainingTime > 0) {
+                redisBlackTokenService.addBlacklistedToken(accessToken, remainingTime);
+            }
         }
         if (refreshToken != null) {
             deleteCookie(response, "refreshToken");
+            redisRefreshTokenService.deleteRefreshToken(refreshToken);
         }
     }
 

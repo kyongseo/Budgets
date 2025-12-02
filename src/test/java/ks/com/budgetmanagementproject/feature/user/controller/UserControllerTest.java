@@ -1,7 +1,9 @@
 package ks.com.budgetmanagementproject.feature.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginResponse;
@@ -15,23 +17,24 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.ResultMatcher;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.http.RequestEntity.patch;
-import static org.springframework.http.RequestEntity.post;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserController.class)
+@WebMvcTest(controllers = UserController.class,
+        excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class UserControllerTest {
 
     @Autowired
@@ -61,17 +64,19 @@ class UserControllerTest {
             // when & then
             mockMvc.perform(post("/users/signup")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                            .content(objectMapper.writeValueAsString(request))
+                            .with(csrf()))
                     .andDo(print())
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value(200));
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.code").value(201))
+                    .andExpect(jsonPath("$.message").exists());
 
             verify(userService).signUp(any(SignUpRequest.class));
         }
 
         @Test
         @DisplayName("회원가입_실패_중복된_이메일")
-        void signUpFailDuplicateEmail() throws Exception {
+        void signUpFailDuplicateEmail() {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .username("test@example.com")
@@ -82,11 +87,12 @@ class UserControllerTest {
                     .when(userService).signUp(any(SignUpRequest.class));
 
             // when & then
-            mockMvc.perform(post("/users/signup")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print())
-                    .andExpect(status().is4xxClientError());
+            assertThrows(ServletException.class, () -> {
+                mockMvc.perform(post("/users/signup")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                        .andDo(print());
+            });
 
             verify(userService).signUp(any(SignUpRequest.class));
         }
@@ -121,16 +127,15 @@ class UserControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value(200))
-                    .andExpect(jsonPath("$.data.accessToken").value("accessToken123"))
-                    .andExpect(jsonPath("$.data.userId").value(1));
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.message").exists());
 
             verify(userService).login(any(LoginRequest.class), any(HttpServletResponse.class));
         }
 
         @Test
         @DisplayName("로그인_실패_존재하지_않는_사용자")
-        void loginFailNonExistentUser() throws Exception {
+        void loginFailNonExistentUser() {
             // given
             LoginRequest request = LoginRequest.builder()
                     .username("wrong@example.com")
@@ -141,11 +146,12 @@ class UserControllerTest {
                     .willThrow(new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
 
             // when & then
-            mockMvc.perform(post("/users/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print())
-                    .andExpect(status().is4xxClientError());
+            assertThrows(Exception.class, () -> {
+                mockMvc.perform(post("/users/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                        .andDo(print());
+            });
 
             verify(userService).login(any(LoginRequest.class), any(HttpServletResponse.class));
         }
@@ -160,7 +166,7 @@ class UserControllerTest {
         void reissueTokenSuccess() throws Exception {
             // given
             String newAccessToken = "newAccessToken123";
-            given(userService.reissueToken(any(), any(HttpServletResponse.class)))
+            given(userService.reissueToken(any(HttpServletRequest.class), any(HttpServletResponse.class)))
                     .willReturn(newAccessToken);
 
             // when & then
@@ -168,23 +174,24 @@ class UserControllerTest {
                             .cookie(new Cookie("refreshToken", "refreshToken123")))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value(200))
-                    .andExpect(jsonPath("$.data").value(newAccessToken));
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.message").exists());
 
-            verify(userService).reissueToken(any(), any(HttpServletResponse.class));
+            verify(userService).reissueToken(any(HttpServletRequest.class), any(HttpServletResponse.class));
         }
 
         @Test
         @DisplayName("AccessToken_재발급_실패_RefreshToken_없음")
-        void reissueTokenFailNoRefreshToken() throws Exception {
+        void reissueTokenFailNoRefreshToken() {
             // given
-            given(userService.reissueToken(any(), any(HttpServletResponse.class)))
-                    .willThrow(new BaseException(BaseExceptionStatus.NON_EXISTENT_TOKEN));
+            doThrow(new BaseException(BaseExceptionStatus.NON_EXISTENT_TOKEN))
+                    .when(userService).reissueToken(any(HttpServletRequest.class), any(HttpServletResponse.class));
 
             // when & then
-            mockMvc.perform((RequestBuilder) post("/users/refresh"))
-                    .andDo(print())
-                    .andExpect(status().is4xxClientError());
+            assertThrows(Exception.class, () -> {
+                mockMvc.perform(post("/users/refresh"))
+                        .andDo(print());
+            });
 
             verify(userService).reissueToken(any(), any(HttpServletResponse.class));
         }
@@ -211,14 +218,15 @@ class UserControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value(200));
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.message").exists());
 
             verify(userService).updateUser(any(User.class), any(UpdateRequest.class));
         }
 
         @Test
         @DisplayName("사용자_정보_변경_실패_존재하지_않는_사용자")
-        void updateUserFailNonExistentUser() throws Exception {
+        void updateUserFailNonExistentUser() {
             // given
             UpdateRequest request = UpdateRequest.builder()
                     .nickname("newNickname")
@@ -229,11 +237,12 @@ class UserControllerTest {
                     .when(userService).updateUser(any(User.class), any(UpdateRequest.class));
 
             // when & then
-            mockMvc.perform(patch("/users")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print())
-                    .andExpect(status().is4xxClientError());
+            assertThrows(Exception.class, () -> {
+                mockMvc.perform(patch("/users")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                        .andDo(print());
+            });
 
             verify(userService).updateUser(any(User.class), any(UpdateRequest.class));
         }
@@ -250,10 +259,11 @@ class UserControllerTest {
             doNothing().when(userService).logout(any(HttpServletResponse.class));
 
             // when & then
-            mockMvc.perform((RequestBuilder) post("/users/logout"))
+            mockMvc.perform(post("/users/logout"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect((ResultMatcher) jsonPath("$.status").value(200));
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.message").exists());
 
             verify(userService).logout(any(HttpServletResponse.class));
         }

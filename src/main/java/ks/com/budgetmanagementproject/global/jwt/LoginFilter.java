@@ -6,7 +6,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.token.service.RedisRefreshTokenService;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
 import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.springframework.http.HttpStatus;
@@ -26,12 +26,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final RedisRefreshTokenService redisRefreshTokenService;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RedisRefreshTokenService redisRefreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
-        this.refreshRepository = refreshRepository;
+        this.redisRefreshTokenService = redisRefreshTokenService;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         refreshToken.setRefresh(refresh);
         refreshToken.setExpiresAt(date.getTime());
 
-        refreshRepository.save(refreshToken);
+        redisRefreshTokenService.addRefreshToken(refreshToken, JWTUtil.REFRESH_TOKEN_EXPIRE_COUNT);
     }
 
     private Cookie createCookie(String key, String value, boolean httpOnly) {

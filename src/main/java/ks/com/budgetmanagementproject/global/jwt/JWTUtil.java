@@ -70,6 +70,16 @@ public class JWTUtil {
         return extractClaims(token).getExpiration().before(new Date());
     }
 
+    public Long getExpiration(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration()
+                .getTime();
+    }
+
     public String createAccessToken(Long userId, String username, List<String> roles, Long expiredMs) {
         return Jwts.builder()
                 .claim("userId", userId)

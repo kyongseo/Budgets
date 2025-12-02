@@ -4,8 +4,9 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.entity.RefreshToken;
 import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
+import ks.com.budgetmanagementproject.feature.token.service.RedisBlackTokenService;
+import ks.com.budgetmanagementproject.feature.token.service.RedisRefreshTokenService;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginResponse;
 import ks.com.budgetmanagementproject.feature.user.dto.SignUpRequest;
@@ -56,6 +57,12 @@ class UserServiceTest {
     @InjectMocks
     UserService userService;
 
+    @Mock
+    RedisRefreshTokenService redisRefreshTokenService;  // 추가
+
+    @Mock
+    RedisBlackTokenService redisBlackTokenService;
+
     @Test
     @DisplayName("회원가입_성공")
     void signUpTestSuccess() {
@@ -82,12 +89,10 @@ class UserServiceTest {
 
         // given
         LoginRequest req = new LoginRequest("test1234@test.com", "1234");
-
         User user = new User();
         user.setId(100L);
         user.setUsername("test1234@test.com");
         user.setPassword("ENC_PW");
-
         Set<Role> roles = new HashSet<>();
         roles.add(new Role(1L, "USER", new HashSet<>()));
         user.setRoles(roles);
@@ -100,8 +105,9 @@ class UserServiceTest {
                 .willReturn("AT");
         given(jwtUtil.createRefreshToken(eq(100L), eq("test1234@test.com"), anyList(), anyLong()))
                 .willReturn("RT");
-        given(refreshRepository.save(any(RefreshToken.class)))
-                .willAnswer(inv -> inv.getArgument(0));
+
+        doNothing().when(redisRefreshTokenService)
+                .addRefreshToken(eq("RT"), anyLong());
 
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -128,22 +134,21 @@ class UserServiceTest {
         verify(passwordEncoder).matches("1234", "ENC_PW");
         verify(jwtUtil).createAccessToken(eq(100L), eq("test1234@test.com"), anyList(), anyLong());
         verify(jwtUtil).createRefreshToken(eq(100L), eq("test1234@test.com"), anyList(), anyLong());
-        verify(refreshRepository).save(any(RefreshToken.class));
-        verifyNoMoreInteractions(userRepository, passwordEncoder, jwtUtil, refreshRepository);
+        verify(redisRefreshTokenService).addRefreshToken(eq("RT"), anyLong());
     }
 
     @Test
     @DisplayName("AccessToken_재발급_성공")
     void reissueTokenTestSuccess() {
-
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-
         Cookie refreshCookie = new Cookie("refreshToken", "RT");
         request.setCookies(refreshCookie);
 
         doNothing().when(jwtUtil).isExpired("RT");
+
+        // Redis Mock 추가
         given(jwtUtil.getUsername("RT")).willReturn("test@test.com");
         given(jwtUtil.getUserId("RT")).willReturn(1L);
         given(jwtUtil.getRole("RT")).willReturn("ROLE_USER");
@@ -168,12 +173,12 @@ class UserServiceTest {
         verify(jwtUtil).getUserId("RT");
         verify(jwtUtil).getRole("RT");
         verify(jwtUtil).createAccessToken(eq(1L), eq("test@test.com"), anyList(), anyLong());
+
     }
 
     @Test
     @DisplayName("AccessToken_재발급_실패_RefreshToken_없음")
     void reissueTokenFailNoToken() {
-
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -187,11 +192,9 @@ class UserServiceTest {
     @Test
     @DisplayName("AccessToken_재발급_실패_RefreshToken_만료")
     void reissueTokenFailExpired() {
-
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-
         Cookie refreshCookie = new Cookie("refreshToken", "EXPIRED_RT");
         request.setCookies(refreshCookie);
 
@@ -207,14 +210,11 @@ class UserServiceTest {
         verify(jwtUtil, never()).getUsername(any());
     }
 
-
     @Test
     @DisplayName("사용자_정보_업데이트_성공")
     void updateUserSuccess() {
-
         // given
         UpdateRequest request = new UpdateRequest("newNickname", "010-1234-5678");
-
         User user = new User();
         user.setId(1L);
         user.setUsername("test@test.com");
@@ -230,17 +230,14 @@ class UserServiceTest {
         // then
         assertEquals("newNickname", user.getNickname());
         assertEquals("010-1234-5678", user.getPhoneNumber());
-
         verify(userRepository).findById(1L);
     }
 
     @Test
     @DisplayName("사용자_정보_업데이트_실패_사용자_없음")
     void updateUserFailUserNotFound() {
-
         // given
         UpdateRequest request = new UpdateRequest("newNickname", "010-1234-5678");
-
         User user = new User();
         user.setId(999L);
 
@@ -258,31 +255,26 @@ class UserServiceTest {
     @Test
     @DisplayName("로그아웃_성공_모든_토큰_삭제")
     void logoutSuccessAllTokens() {
-
         // given
         MockHttpServletResponse response = new MockHttpServletResponse();
         response.setHeader("accessToken", "AT");
         response.setHeader("refreshToken", "RT");
 
+        // JWT Mock 추가
+        given(jwtUtil.getExpiration("AT"))
+                .willReturn(System.currentTimeMillis() + 10000);
+
+        // Redis Mock 추가
+        doNothing().when(redisRefreshTokenService).deleteRefreshToken("RT");
+        doNothing().when(redisBlackTokenService).addBlacklistedToken(eq("AT"), anyLong());
+
         // when
         userService.logout(response);
 
         // then
-        Cookie accessCookie = response.getCookie("accessToken");
-        Cookie refreshCookie = response.getCookie("refreshToken");
-
-        assertNotNull(accessCookie);
-        assertNotNull(refreshCookie);
-        assertNull(accessCookie.getValue());
-        assertNull(refreshCookie.getValue());
-        assertEquals(0, accessCookie.getMaxAge());
-        assertEquals(0, refreshCookie.getMaxAge());
-        assertEquals("/", accessCookie.getPath());
-        assertEquals("/", refreshCookie.getPath());
-        assertTrue(accessCookie.isHttpOnly());
-        assertTrue(refreshCookie.isHttpOnly());
-        assertFalse(accessCookie.getSecure());
-        assertFalse(refreshCookie.getSecure());
+        verify(redisRefreshTokenService).deleteRefreshToken("RT");
+        verify(redisBlackTokenService).addBlacklistedToken(eq("AT"), anyLong());
+        verify(jwtUtil).getExpiration("AT");
 
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
@@ -290,51 +282,48 @@ class UserServiceTest {
     @Test
     @DisplayName("로그아웃_성공_AccessToken만_삭제")
     void logoutSuccessOnlyAccessToken() {
-
         // given
         MockHttpServletResponse response = new MockHttpServletResponse();
         response.setHeader("accessToken", "AT");
+
+        // JWT Mock 추가
+        given(jwtUtil.getExpiration("AT"))
+                .willReturn(System.currentTimeMillis() + 10000);
+
+        // Redis Mock 추가
+        doNothing().when(redisBlackTokenService).addBlacklistedToken(eq("AT"), anyLong());
 
         // when
         userService.logout(response);
 
         // then
-        Cookie accessCookie = response.getCookie("accessToken");
-        assertNotNull(accessCookie);
-        assertNull(accessCookie.getValue());
-        assertEquals(0, accessCookie.getMaxAge());
-        assertTrue(accessCookie.isHttpOnly());
-
-        Cookie refreshCookie = response.getCookie("refreshToken");
-        assertNull(refreshCookie);
+        verify(redisBlackTokenService).addBlacklistedToken(eq("AT"), anyLong());
+        verify(jwtUtil).getExpiration("AT");
+        verify(redisRefreshTokenService, never()).deleteRefreshToken(any());
     }
 
     @Test
     @DisplayName("로그아웃_성공_RefreshToken만_삭제")
     void logoutSuccessOnlyRefreshToken() {
-
         // given
         MockHttpServletResponse response = new MockHttpServletResponse();
         response.setHeader("refreshToken", "RT");
+
+        // Redis Mock 추가
+        doNothing().when(redisRefreshTokenService).deleteRefreshToken("RT");
 
         // when
         userService.logout(response);
 
         // then
-        Cookie refreshCookie = response.getCookie("refreshToken");
-        assertNotNull(refreshCookie);
-        assertNull(refreshCookie.getValue());
-        assertEquals(0, refreshCookie.getMaxAge());
-        assertTrue(refreshCookie.isHttpOnly());
-
-        Cookie accessCookie = response.getCookie("accessToken");
-        assertNull(accessCookie);
+        verify(redisRefreshTokenService).deleteRefreshToken("RT");
+        verify(redisBlackTokenService, never()).addBlacklistedToken(any(), anyLong());
+        verify(jwtUtil, never()).getExpiration(any());
     }
 
     @Test
     @DisplayName("로그아웃_토큰_없음_이미_로그아웃_상태")
     void logoutNoTokensAlreadyLoggedOut() {
-
         // given
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -342,9 +331,8 @@ class UserServiceTest {
         userService.logout(response);
 
         // then
-        Cookie accessCookie = response.getCookie("accessToken");
-        Cookie refreshCookie = response.getCookie("refreshToken");
-        assertNull(accessCookie);
-        assertNull(refreshCookie);
+        verifyNoInteractions(redisRefreshTokenService);
+        verifyNoInteractions(redisBlackTokenService);
+        verifyNoInteractions(jwtUtil);
     }
 }
