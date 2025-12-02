@@ -2,6 +2,8 @@ package ks.com.budgetmanagementproject.global.security;
 
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
+import ks.com.budgetmanagementproject.global.common.logger.BaseException;
+import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Bad credentials"));
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_USER));
 
         return new CustomUserDetails(user);
         }
