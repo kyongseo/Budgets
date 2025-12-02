@@ -170,6 +170,10 @@ make service-build
 
 # 4. API 문서 확인
 # http://localhost:8080/swagger-ui.html
+
+# 5. test coverage 확인
+ ./gradlew clean test
+ 
 ```
 
 ---
