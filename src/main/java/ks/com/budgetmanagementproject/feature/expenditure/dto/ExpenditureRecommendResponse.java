@@ -6,12 +6,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Getter
+@Getter @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpenditureRecommendResponse {
@@ -26,4 +27,13 @@ public class ExpenditureRecommendResponse {
     @NotBlank(message = "메시지는 필수입니다.")
     @Size(max = 500, message = "메시지는 500자를 초과할 수 없습니다.")
     private String message;
+
+    public static ExpenditureRecommendResponse of(
+            List<ExpenditureRecommend> recommendList, long todayExpenditurePossibleTotal, String message) {
+        return ExpenditureRecommendResponse.builder()
+                .recommendList(recommendList)
+                .todayExpenditurePossibleTotal(todayExpenditurePossibleTotal)
+                .message(message)
+                .build();
+    }
 }
