@@ -3,6 +3,7 @@ package ks.com.budgetmanagementproject.feature.expenditure.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
+import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureCreateRequest;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureUpdateRequest;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.common.model.BaseTimeEntity;
@@ -34,12 +35,12 @@ public class Expenditure extends BaseTimeEntity {
     private LocalDate period;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryId")
+    @JoinColumn(name = "category_Id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private BudgetCategory category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_Id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
@@ -48,6 +49,17 @@ public class Expenditure extends BaseTimeEntity {
 
     @Column(nullable = false)
     private BigDecimal money;
+
+    public static Expenditure from(ExpenditureCreateRequest request, BudgetCategory category, User user) {
+        return Expenditure.builder()
+                .money(request.getMoney())
+                .memo(request.getMemo())
+                .period(request.getPeriod())
+                .category(category)
+                .user(user)
+                .excludingTotal(false)
+                .build();
+    }
 
     public void updateExpenditure(ExpenditureUpdateRequest request, BudgetCategory category) {
         this.money = request.getMoney();
