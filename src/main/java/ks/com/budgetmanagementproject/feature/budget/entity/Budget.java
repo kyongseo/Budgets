@@ -4,6 +4,8 @@ package ks.com.budgetmanagementproject.feature.budget.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.global.common.logger.BaseException;
+import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import ks.com.budgetmanagementproject.global.common.model.BaseTimeEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,12 +29,12 @@ public class Budget extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_Id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryId")
+    @JoinColumn(name = "category_Id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private BudgetCategory category;
 
@@ -44,5 +46,17 @@ public class Budget extends BaseTimeEntity {
 
     public void updateBudget(BigDecimal money) {
         this.money = money;
+    }
+
+    public void deduct(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BaseException(BaseExceptionStatus.INVALID_AMOUNT);
+        }
+
+        this.money = this.money.subtract(amount);
+
+        if (this.money.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BaseException(BaseExceptionStatus.INSUFFICIENT_BUDGET);
+        }
     }
 }
