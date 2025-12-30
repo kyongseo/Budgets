@@ -10,10 +10,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 @RequiredArgsConstructor
-@Component
 @ConditionalOnProperty(
         value = "app.scheduling.enabled",
         havingValue = "true",
@@ -30,6 +30,7 @@ import java.util.Set;
 )
 @EnableScheduling
 @Slf4j
+@Service
 public class ExpenditureSchedulerService {
 
     private final ExpenditureService expenditureService;
@@ -64,7 +65,7 @@ public class ExpenditureSchedulerService {
             }
 
             try {
-                ExpenditureRecommendResponse response = expenditureService.expenditureRecommend(user);
+                ExpenditureRecommendResponse response = expenditureService.getExpenditureRecommendation(String.valueOf(user));
                 sendEmail(user.getUsername(),
                         "💰 [Budget Management] 오늘의 지출 추천 안내",
                         "email/expenditure-recommend",
@@ -97,7 +98,7 @@ public class ExpenditureSchedulerService {
             }
 
             try {
-                ExpenditureGuideResponse response = expenditureService.expenditureGuide(user);
+                ExpenditureGuideResponse response = expenditureService.getExpenditureGuide(String.valueOf(user));
                 sendEmail(user.getUsername(),
                         "📝 [Budget Management] 오늘의 지출 내역 안내",
                         "email/expenditure-guide",
