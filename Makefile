@@ -7,8 +7,9 @@ service-run: build
 	docker-compose up --build -d
 
 # 도커 컨테이너 재시작
-service-restart: build
-	docker restart mongo-db
+service-restart: service-build
+	docker restart zookeeper
+	docker restart kafka
 	docker restart postgresql-db
 	docker restart redis-db
 

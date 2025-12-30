@@ -43,6 +43,8 @@ services:
     image: confluentinc/cp-kafka:7.4.0
     hostname: kafka
     container_name: kafka
+    volumes:
+      - kafka_data:/data
     depends_on:
       - zookeeper
     ports:
@@ -63,3 +65,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  kafka_data:
