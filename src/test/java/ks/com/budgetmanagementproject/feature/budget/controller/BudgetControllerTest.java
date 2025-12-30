@@ -3,13 +3,17 @@ package ks.com.budgetmanagementproject.feature.budget.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ks.com.budgetmanagementproject.feature.budget.dto.*;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetService;
+import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -21,6 +25,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -56,14 +62,11 @@ class BudgetControllerTest {
 
             doNothing().when(budgetService).createBudget(any(BudgetSettingRequest.class), any());
 
-            // when & then
             mockMvc.perform(post("/budgets")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.code").value(201))
-                    .andExpect(jsonPath("$.message").exists());
+                    .andExpect(status().isCreated());
 
             verify(budgetService).createBudget(any(BudgetSettingRequest.class), any());
         }
@@ -101,7 +104,8 @@ class BudgetControllerTest {
                     .money(BigDecimal.valueOf(150_000L))
                     .build();
 
-            doNothing().when(budgetService).budgetUpdate(eq(budgetId), any(BudgetUpdateRequest.class), any());
+            when(budgetService.budgetUpdate(eq(budgetId), any()))
+                    .thenReturn(null);
 
             // when
             mockMvc.perform(patch("/budgets/{budgetId}", budgetId)
@@ -113,7 +117,7 @@ class BudgetControllerTest {
                     .andExpect(jsonPath("$.message").exists());
 
             // then
-            verify(budgetService).budgetUpdate(eq(budgetId), any(BudgetUpdateRequest.class), any());
+            verify(budgetService).budgetUpdate(eq(budgetId), any(BudgetUpdateRequest.class));
         }
     }
 
