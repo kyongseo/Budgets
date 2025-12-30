@@ -4,9 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ks.com.budgetmanagementproject.feature.expenditure.dto.*;
 import ks.com.budgetmanagementproject.feature.expenditure.service.ExpenditureService;
-import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
+import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,9 +25,10 @@ public class ExpenditureController {
     @PostMapping
     public ResponseEntity<?> expenditureCreate_endpoint(
             @Validated @RequestBody ExpenditureCreateRequest request,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        expenditureService.expenditureCreate(request, user);
+        String username = userDetails.getUsername();
+        expenditureService.createExpenditure(request, username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_CREATE_SUCCESS.getStatus())
@@ -39,9 +40,10 @@ public class ExpenditureController {
     public ResponseEntity<?> expenditureUpdate_endpoint(
             @PathVariable Long expenditureId,
             @Validated @RequestBody ExpenditureUpdateRequest request,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        expenditureService.expenditureUpdate(expenditureId, request, user);
+        String username = userDetails.getUsername();
+        expenditureService.updateExpenditure(expenditureId, request, username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_UPDATE_SUCCESS.getStatus())
@@ -53,9 +55,10 @@ public class ExpenditureController {
     @GetMapping
     public ResponseEntity<?> expenditureList_endpoint(
             @Validated @ModelAttribute ExpenditureListRequest request,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ExpenditureListResponse response = expenditureService.getExpenditureList(request, user);
+        String username = userDetails.getUsername();
+        ExpenditureListResponse response = expenditureService.getExpenditureList(request, username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_LIST_SUCCESS.getStatus())
@@ -66,9 +69,10 @@ public class ExpenditureController {
     @GetMapping("/{expenditureId}")
     public ResponseEntity<?> expenditureDetail(
             @PathVariable Long expenditureId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ExpenditureDetailResponse response = expenditureService.expenditureDetail(expenditureId, user);
+        String username = userDetails.getUsername();
+        ExpenditureDetailResponse response = expenditureService.getExpenditureDetail(expenditureId, username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_DETAIL_SUCCESS.getStatus())
@@ -79,9 +83,10 @@ public class ExpenditureController {
     @DeleteMapping("/soft-delete/{expenditureId}")
     public ResponseEntity<?> expenditureSoftDelete(
             @PathVariable Long expenditureId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        expenditureService.expenditureSoftDelete(expenditureId, user);
+        String username = userDetails.getUsername();
+        expenditureService.softDeleteExpenditure(expenditureId, username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_SOFT_DELETE_SUCCESS.getStatus())
@@ -92,9 +97,10 @@ public class ExpenditureController {
     @DeleteMapping("/hard-delete/{expenditureId}")
     public ResponseEntity<?> expenditureHardDelete(
             @PathVariable Long expenditureId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        expenditureService.expenditureHardDelete(expenditureId, user);
+        String username = userDetails.getUsername();
+        expenditureService.hardDeleteExpenditure(expenditureId, username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_HARD_DELETE_SUCCESS.getStatus())
@@ -105,10 +111,11 @@ public class ExpenditureController {
     @PatchMapping("/except/{expenditureId}")
     public ResponseEntity<?> expenditureExceptUpdate(
             @PathVariable Long expenditureId,
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Validated @RequestBody ExpenditureExcludeRequest request) {
 
-        expenditureService.updateExpenditureExclude(expenditureId, user, request);
+        String username = userDetails.getUsername();
+        expenditureService.updateExpenditureExclude(expenditureId, username, request);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_EXCEPT_UPDATE_SUCCESS.getStatus())
@@ -118,9 +125,10 @@ public class ExpenditureController {
     @Operation(summary = "✅ 지출 추천", description = "사용자의 예산과 남은 기간을 고려하여 오늘 적정 지출 금액을 카테고리별로 추천합니다.")
     @GetMapping("/recommend")
     public ResponseEntity<?> expenditureRecommend(
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ExpenditureRecommendResponse response = expenditureService.expenditureRecommend(user);
+        String username = userDetails.getUsername();
+        ExpenditureRecommendResponse response = expenditureService.getExpenditureRecommendation(username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_RECOMMEND_SUCCESS.getStatus())
@@ -130,9 +138,10 @@ public class ExpenditureController {
     @Operation(summary = "✅ 지출 안내", description = "오늘 사용한 지출과 적정 금액을 비교하여 분석 결과를 제공합니다.")
     @GetMapping("/guide")
     public ResponseEntity<?> expenditureGuide(
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ExpenditureGuideResponse response = expenditureService.expenditureGuide(user);
+        String username = userDetails.getUsername();
+        ExpenditureGuideResponse response = expenditureService.getExpenditureGuide(username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.EXPENDITURE_GUIDE_SUCCESS.getStatus())
