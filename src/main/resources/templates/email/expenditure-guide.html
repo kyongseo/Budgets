@@ -1,79 +1,243 @@
+<!-- src/main/resources/templates/email/expenditure-guide.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘의 지출 안내</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .summary-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .summary-label {
+            color: #92400e;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .summary-amount {
+            color: #b45309;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 30px 0;
+        }
+        .section-title {
+            color: #374151;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .guide-list {
+            margin: 20px 0;
+        }
+        .guide-item {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .guide-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(5px);
+        }
+        .guide-item.safe {
+            border-left-color: #22c55e;
+        }
+        .guide-item.warning {
+            border-left-color: #eab308;
+        }
+        .guide-item.danger {
+            border-left-color: #ef4444;
+        }
+        .guide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .category-name {
+            font-weight: 600;
+            color: #374151;
+            font-size: 16px;
+        }
+        .spent-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f97316;
+        }
+        .guide-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .detail-item {
+            text-align: center;
+            flex: 1;
+        }
+        .detail-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 3px;
+        }
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .risk-badge.safe {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .risk-badge.warning {
+            background-color: #fef3c7;
+            color: #854d0e;
+        }
+        .risk-badge.danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px 30px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .emoji {
+            font-size: 24px;
+        }
+        .message-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .message-box p {
+            color: #92400e;
+            margin: 0;
+            font-size: 14px;
+        }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;">
-<div style="max-width: 600px; margin: 40px auto; padding: 0; background-color: #f9f9f9;">
-
+<body>
+<div class="container">
     <!-- 헤더 -->
-    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 40px 30px; text-align: center;">
-        <h1 style="margin: 0; font-size: 28px; font-weight: bold;">📝 오늘의 지출 안내</h1>
-        <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Budget Management Service</p>
+    <div class="header">
+        <h1><span class="emoji">📝</span> 오늘의 지출 내역</h1>
+        <p th:text="${#temporals.format(#temporals.createNow(), 'yyyy년 MM월 dd일 EEEE', 'ko')}">2024년 12월 4일 수요일</p>
     </div>
 
-    <!-- 본문 -->
-    <div style="background-color: white; padding: 40px 30px;">
-
-        <!-- 총 지출 금액 -->
-        <div style="background: linear-gradient(135deg, #fff0f0 0%, #ffe8e8 100%); padding: 25px; border-radius: 12px; margin-bottom: 30px; text-align: center; box-shadow: 0 2px 8px rgba(245, 87, 108, 0.1);">
-            <p style="margin: 0; font-size: 14px; color: #666; font-weight: 500;">오늘 총 지출 금액</p>
-            <h2 style="margin: 15px 0 0 0; color: #f5576c; font-size: 36px; font-weight: bold;" th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'">0원</h2>
+    <!-- 메인 컨텐츠 -->
+    <div class="content">
+        <!-- 오늘 총 지출 금액 -->
+        <div class="summary-box">
+            <p class="summary-label">오늘 총 지출 금액</p>
+            <p class="summary-amount" th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + '원'">50,000원</p>
         </div>
 
-        <!-- 카테고리별 지출 -->
-        <h3 style="color: #333; margin: 0 0 20px 0; font-size: 18px; font-weight: bold;">📊 카테고리별 지출 내역</h3>
+        <div class="divider"></div>
 
-        <div th:if="${guideList != null and !guideList.isEmpty()}">
-            <div th:each="guide : ${guideList}"
-                 style="margin-bottom: 20px; padding: 20px; border-radius: 12px; border-left: 4px solid;"
-                 th:styleappend="${guide.risk == 'HIGH'} ? 'background-color: #ffebee; border-left-color: #f44336;' :
-                                     ${guide.risk == 'MEDIUM'} ? 'background-color: #fff3e0; border-left-color: #ff9800;' :
-                                     'background-color: #e8f5e9; border-left-color: #4caf50;'">
+        <!-- 카테고리별 지출 내역 -->
+        <h2 class="section-title">💳 카테고리별 지출 내역</h2>
 
-                <div style="font-weight: bold; color: #333; margin-bottom: 12px; font-size: 16px;" th:text="${guide.category.name}">카테고리</div>
+        <div class="guide-list">
+            <div class="guide-item"
+                 th:each="guide : ${guideList}"
+                 th:classappend="${guide.risk < 80} ? 'safe' : (${guide.risk < 100} ? 'warning' : 'danger')">
 
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <div style="flex: 1;">
-                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">오늘 지출</div>
-                        <div style="font-weight: bold; font-size: 18px;"
-                             th:styleappend="${guide.risk == 'HIGH'} ? 'color: #f44336;' :
-                                                ${guide.risk == 'MEDIUM'} ? 'color: #ff9800;' :
-                                                'color: #4caf50;'"
-                             th:text="${#numbers.formatInteger(guide.todayExpenditureAmount, 0, 'COMMA')} + '원'">0원</div>
+                <div class="guide-header">
+                    <div>
+                        <span class="category-name" th:text="${guide.categoryName}">식비</span>
+                        <span class="risk-badge"
+                              th:classappend="${guide.risk < 80} ? 'safe' : (${guide.risk < 100} ? 'warning' : 'danger')"
+                              th:text="${guide.risk < 80} ? '양호' : (${guide.risk < 100} ? '주의' : '위험')">
+                                양호
+                            </span>
                     </div>
-                    <div style="flex: 1; text-align: right;">
-                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">적정 금액</div>
-                        <div style="font-weight: bold; color: #666; font-size: 18px;" th:text="${#numbers.formatInteger(guide.todayAppropriateExpenditureAmount, 0, 'COMMA')} + '원'">0원</div>
-                    </div>
+                    <span class="spent-amount" th:text="${#numbers.formatDecimal(guide.todaySpent, 0, 'COMMA', 0, 'POINT')} + '원'">15,000원</span>
                 </div>
 
-                <div style="text-align: right; margin-top: 12px;">
-                        <span style="padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white;"
-                              th:styleappend="${guide.risk == 'HIGH'} ? 'background-color: #f44336;' :
-                                             ${guide.risk == 'MEDIUM'} ? 'background-color: #ff9800;' :
-                                             'background-color: #4caf50;'"
-                              th:text="${guide.risk}">RISK</span>
+                <div class="guide-details">
+                    <div class="detail-item">
+                        <div class="detail-label">적정 금액</div>
+                        <div class="detail-value" th:text="${#numbers.formatDecimal(guide.appropriateAmount, 0, 'COMMA', 0, 'POINT')} + '원'">10,000원</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">위험도</div>
+                        <div class="detail-value" th:text="${guide.risk} + '%'">150%</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div th:if="${guideList == null or guideList.isEmpty()}"
-             style="background-color: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">
-            <p style="margin: 0; color: #1565c0; font-size: 15px;">ℹ️ 오늘 지출 내역이 없습니다.</p>
+        <!-- 안내 메시지 -->
+        <div class="message-box">
+            <p>💡 <strong>TIP:</strong> 위험도가 100%를 넘는 카테고리는 예산 초과 상태입니다. 내일부터는 조금 더 절약해보세요!</p>
         </div>
-
     </div>
 
     <!-- 푸터 -->
-    <div style="background-color: #f5f5f5; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-        <p style="margin: 0; font-size: 12px; color: #999;">
-            본 메일은 Budget Management 서비스에서 자동으로 발송되었습니다.
-        </p>
+    <div class="footer">
+        <p><strong>오늘도 수고하셨습니다! 💪</strong></p>
+        <p style="margin-top: 10px; font-size: 12px; color: #9ca3af;">이 메일은 매일 오후 10시에 자동으로 발송됩니다.</p>
     </div>
-
 </div>
 </body>
 </html>
