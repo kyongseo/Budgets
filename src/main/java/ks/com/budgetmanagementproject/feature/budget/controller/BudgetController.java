@@ -5,10 +5,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetRecommendListResponse;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetSettingRequest;
 import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateRequest;
+import ks.com.budgetmanagementproject.feature.budget.dto.BudgetUpdateResponse;
 import ks.com.budgetmanagementproject.feature.budget.service.BudgetService;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponse;
 import ks.com.budgetmanagementproject.global.common.logger.BaseResponseStatus;
+import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,9 +29,10 @@ public class BudgetController {
     @PostMapping
     public ResponseEntity<?> budgetSetting_endpoint(
             @Validated @RequestBody BudgetSettingRequest request,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        budgetService.createBudget(request, user);
+        String username = userDetails.getUsername();
+        budgetService.createBudget(request, username);
 
         return ResponseEntity
                 .status(BaseResponseStatus.BUDGET_CREATE_SUCCESS.getStatus())
@@ -40,14 +43,14 @@ public class BudgetController {
     @PatchMapping("/{budgetId}")
     public ResponseEntity<?> budgetUpdate_endpoint(
             @PathVariable Long budgetId,
-            @Validated @RequestBody BudgetUpdateRequest request,
-            @AuthenticationPrincipal User user) {
+            @Validated @RequestBody BudgetUpdateRequest request
+    ) {
 
-        budgetService.budgetUpdate(budgetId, request, user);
+        BudgetUpdateResponse response = budgetService.budgetUpdate(budgetId, request);
 
         return ResponseEntity
                 .status(BaseResponseStatus.BUDGET_UPDATE_SUCCESS.getStatus())
-                .body(BaseResponse.of(BaseResponseStatus.BUDGET_UPDATE_SUCCESS));
+                .body(BaseResponse.of(BaseResponseStatus.BUDGET_UPDATE_SUCCESS, response));
     }
 
     @Operation(summary = "✅ 예산 삭제(soft)", description = "예산 삭제(soft)")
