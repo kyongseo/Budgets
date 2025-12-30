@@ -29,7 +29,6 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
-    //    private final RefreshRepository refreshRepository;
     private final RoleRepository roleRepository;
     private final RedisRefreshTokenService redisRefreshTokenService;
     private final RedisBlackTokenService redisBlackTokenService;
