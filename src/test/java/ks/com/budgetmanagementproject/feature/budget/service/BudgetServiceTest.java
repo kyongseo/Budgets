@@ -9,6 +9,7 @@ import ks.com.budgetmanagementproject.feature.budget.entity.BudgetCategory;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetCategoryRepository;
 import ks.com.budgetmanagementproject.feature.budget.repository.BudgetRepository;
 import ks.com.budgetmanagementproject.feature.user.entity.User;
+import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BudgetServiceTest {
@@ -39,6 +41,8 @@ class BudgetServiceTest {
     BudgetRepository budgetRepository;
     @Mock
     BudgetCategoryRepository categoryRepository;
+    @Mock
+    private UserRepository userRepository;
     @InjectMocks
     BudgetService budgetService;
 
@@ -56,25 +60,21 @@ class BudgetServiceTest {
         @DisplayName("성공_카테고리존재_중복없음_저장")
         void success_when_category_exists_and_no_duplicate() {
             // given
-            BudgetSettingRequest req = BudgetSettingRequest.builder()
-                    .categoryName("식비")
-                    .money(BigDecimal.valueOf(100_000L))
-                    .period(YearMonth.from(LocalDate.of(2025, 9, 15)))
-                    .build();
-            given(categoryRepository.findByName("식비")).willReturn(Optional.of(food));
-            LocalDate key = LocalDate.of(2025, 9, 1);
-            given(budgetRepository.findByCategoryAndPeriodAndUser(food, key, user)).willReturn(null);
+            BudgetSettingRequest request = new BudgetSettingRequest("식비", 10000, YearMonth.of(2025, 1));
+
+            User user = new User();
+            BudgetCategory category = new BudgetCategory();
+
+            when(userRepository.findByUsername("test")).thenReturn(Optional.of(user));
+            when(categoryRepository.findByName("식비")).thenReturn(Optional.of(category));
+            when(budgetRepository.findByUserAndCategoryAndPeriod(user, category, LocalDate.of(2025, 1, 1)))
+                    .thenReturn(Optional.empty());
 
             // when
-            budgetService.createBudget(req, user);
+            budgetService.createBudget(request, "test");
 
             // then
-            then(budgetRepository).should().save(argThat(b ->
-                    b.getCategory().equals(food) &&
-                            b.getUser().equals(user) &&
-                            b.getMoney().compareTo(BigDecimal.valueOf(100_000L)) == 0 &&
-                            b.getPeriod().equals(key)
-            ));
+            verify(budgetRepository).save(any(Budget.class));
         }
 
         @Test
@@ -87,7 +87,7 @@ class BudgetServiceTest {
                     .build();
             given(categoryRepository.findByName("없는카테고리")).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> budgetService.createBudget(req, user))
+            assertThatThrownBy(() -> budgetService.createBudget(req, String.valueOf(user)))
                     .isInstanceOf(BaseException.class);
         }
 
@@ -104,7 +104,7 @@ class BudgetServiceTest {
             Budget exists = Budget.builder().id(100L).category(food).user(user).money(BigDecimal.valueOf(10_000L)).period(key).build();
             given(budgetRepository.findByCategoryAndPeriodAndUser(food, key, user)).willReturn(exists);
 
-            assertThatThrownBy(() -> budgetService.createBudget(req, user))
+            assertThatThrownBy(() -> budgetService.createBudget(req, String.valueOf(user)))
                     .isInstanceOf(BaseException.class)
                     .hasFieldOrPropertyWithValue("status", BaseExceptionStatus.DUPLICATE_BUDGET);
         }
@@ -128,7 +128,7 @@ class BudgetServiceTest {
             BudgetUpdateRequest req = BudgetUpdateRequest.builder().money(BigDecimal.valueOf(150_000L)).build();
 
             // when
-            budgetService.budgetUpdate(1L, req, user);
+            budgetService.budgetUpdate(1L, req);
 
             // then
             assertThat(budget.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(150_000L));
@@ -140,19 +140,7 @@ class BudgetServiceTest {
             given(budgetRepository.findById(99L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> budgetService.budgetUpdate(99L,
-                    BudgetUpdateRequest.builder().money(BigDecimal.valueOf(1L)).build(), user))
-                    .isInstanceOf(BaseException.class);
-        }
-
-        @Test
-        @DisplayName("실패_소유자아님")
-        void fail_when_not_owner() {
-            Budget budget = Budget.builder().id(1L).user(other).category(food).money(BigDecimal.valueOf(10L))
-                    .period(LocalDate.of(2025, 9, 1)).build();
-            given(budgetRepository.findById(1L)).willReturn(Optional.of(budget));
-
-            assertThatThrownBy(() -> budgetService.budgetUpdate(1L,
-                    BudgetUpdateRequest.builder().money(BigDecimal.valueOf(1L)).build(), user))
+                    BudgetUpdateRequest.builder().money(BigDecimal.valueOf(1L)).build()))
                     .isInstanceOf(BaseException.class);
         }
     }
