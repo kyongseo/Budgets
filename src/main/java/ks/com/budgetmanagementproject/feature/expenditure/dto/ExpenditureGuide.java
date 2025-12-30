@@ -21,17 +21,17 @@ public class ExpenditureGuide {
 
     @NotNull(message = "카테고리는 필수입니다.")
     @Valid
-    private BudgetCategory category;
+    private String categoryName;
 
     @NotNull(message = "오늘 지출 금액은 필수입니다.")
     @DecimalMin(value = "0.0", message = "오늘 지출 금액은 0 이상이어야 합니다.")
-    private BigDecimal todayExpenditureAmount;
+    private BigDecimal todaySpent;
 
     @NotNull(message = "오늘 적정 지출 금액은 필수입니다.")
-    @DecimalMin(value = "0.0", message = "오늘 적정 지출 금액은 0 이상이어야 합니다.")
-    private BigDecimal todayAppropriateExpenditureAmount;
+    @DecimalMin(value = "0.0", message = "오늘 적정 지출 금액은 0 이상이어야 합니다.")// 오늘 지출 금액
+    private BigDecimal appropriateAmount;
 
     @NotBlank(message = "위험도는 필수입니다.")
     @Size(max = 10, message = "위험도는 10자를 초과할 수 없습니다.")
-    private String risk;
+    private int risk;
 }
