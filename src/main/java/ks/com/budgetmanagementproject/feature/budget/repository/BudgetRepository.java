@@ -17,8 +17,6 @@ public interface BudgetRepository extends JpaRepository<Budget,Long> {
 
     Budget findByCategoryAndPeriodAndUser(BudgetCategory category, LocalDate period, User user);
 
-    List<Budget> findAll();
-
     @Query("SELECT b FROM Budget b JOIN FETCH b.category")
     List<Budget> findAllWithCategory();
 
