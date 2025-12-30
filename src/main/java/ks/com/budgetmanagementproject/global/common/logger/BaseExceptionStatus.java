@@ -14,6 +14,8 @@ public enum BaseExceptionStatus {
     NON_EXISTENT_CATEGORY(HttpStatus.NOT_FOUND, "존재하지 않는 카테고리입니다."),
     DUPLICATE_BUDGET(HttpStatus.CONFLICT, "이미 설정한 예산입니다."),
     NON_EXISTENT_BUDGET(HttpStatus.NOT_FOUND, "존재하지 않는 예산입니다."),
+    INSUFFICIENT_BUDGET(HttpStatus.BAD_REQUEST, "예산이 부족합니다."),
+    INVALID_AMOUNT(HttpStatus.BAD_REQUEST, "금액은 0보다 커야 합니다."),
     FORBIDDEN_USER(HttpStatus.FORBIDDEN, "권한이 없는 유저입니다."),
     NON_EXISTENT_EXPENDITURE(HttpStatus.NOT_FOUND, "존재하지 않는 지출입니다."),
     NON_EXISTENT_TOKEN(HttpStatus.NOT_FOUND, "존재하지 않는 토큰입니다."),
