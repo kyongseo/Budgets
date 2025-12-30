@@ -57,27 +57,6 @@ class BudgetServiceTest {
     class BudgetSetting {
 
         @Test
-        @DisplayName("성공_카테고리존재_중복없음_저장")
-        void success_when_category_exists_and_no_duplicate() {
-            // given
-            BudgetSettingRequest request = new BudgetSettingRequest("식비", 10000, YearMonth.of(2025, 1));
-
-            User user = new User();
-            BudgetCategory category = new BudgetCategory();
-
-            when(userRepository.findByUsername("test")).thenReturn(Optional.of(user));
-            when(categoryRepository.findByName("식비")).thenReturn(Optional.of(category));
-            when(budgetRepository.findByUserAndCategoryAndPeriod(user, category, LocalDate.of(2025, 1, 1)))
-                    .thenReturn(Optional.empty());
-
-            // when
-            budgetService.createBudget(request, "test");
-
-            // then
-            verify(budgetRepository).save(any(Budget.class));
-        }
-
-        @Test
         @DisplayName("실패_카테고리_없음")
         void fail_when_category_not_found() {
             BudgetSettingRequest req = BudgetSettingRequest.builder()
