@@ -40,4 +40,8 @@ public abstract class BaseTimeEntity {
     protected void onUpdate() {
         updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
 }
