@@ -35,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class ExpenditureControllerTest {
 
+    private static final Long DEFAULT_EXPENDITURE_ID = 1L;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -104,7 +106,6 @@ class ExpenditureControllerTest {
         @DisplayName("지출_수정_성공")
         void expenditureUpdateSuccess() throws Exception {
             // given
-            Long expenditureId = 1L;
             ExpenditureUpdateRequest request = ExpenditureUpdateRequest.builder()
                     .money(new BigDecimal("20000"))
                     .categoryName("교통")
@@ -112,10 +113,10 @@ class ExpenditureControllerTest {
                     .memo("버스 탑승")
                     .build();
 
-            doNothing().when(expenditureService).updateExpenditure(eq(expenditureId), any(ExpenditureUpdateRequest.class), any());
+            doNothing().when(expenditureService).updateExpenditure(eq(DEFAULT_EXPENDITURE_ID), any(ExpenditureUpdateRequest.class), any());
 
             // when & then
-            mockMvc.perform(patch("/expenditures/{id}", expenditureId)
+            mockMvc.perform(patch("/expenditures/{id}", DEFAULT_EXPENDITURE_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
@@ -123,14 +124,13 @@ class ExpenditureControllerTest {
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(expenditureService).updateExpenditure(eq(expenditureId), any(ExpenditureUpdateRequest.class), any());
+            verify(expenditureService).updateExpenditure(eq(DEFAULT_EXPENDITURE_ID), any(ExpenditureUpdateRequest.class), any());
         }
 
         @Test
         @DisplayName("지출_수정_실패_유효성_검증_금액_null")
         void expenditureUpdateFailValidationMoneyNull() throws Exception {
             // given
-            Long expenditureId = 1L;
             ExpenditureUpdateRequest request = ExpenditureUpdateRequest.builder()
                     .money(null)
                     .categoryName("교통")
@@ -139,7 +139,7 @@ class ExpenditureControllerTest {
                     .build();
 
             // when & then
-            mockMvc.perform(patch("/expenditures/{id}", expenditureId)
+            mockMvc.perform(patch("/expenditures/{id}", DEFAULT_EXPENDITURE_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
@@ -152,7 +152,6 @@ class ExpenditureControllerTest {
         @DisplayName("지출_수정_실패_유효성_검증_카테고리_공백")
         void expenditureUpdateFailValidationCategoryBlank() throws Exception {
             // given
-            Long expenditureId = 1L;
             ExpenditureUpdateRequest request = ExpenditureUpdateRequest.builder()
                     .money(new BigDecimal("20000"))
                     .categoryName("")
@@ -161,7 +160,7 @@ class ExpenditureControllerTest {
                     .build();
 
             // when & then
-            mockMvc.perform(patch("/expenditures/{id}", expenditureId)
+            mockMvc.perform(patch("/expenditures/{id}", DEFAULT_EXPENDITURE_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
@@ -235,18 +234,17 @@ class ExpenditureControllerTest {
         @DisplayName("지출_상세_조회_성공")
         void expenditureDetailSuccess() throws Exception {
             // given
-            Long expenditureId = 1L;
             ExpenditureDetailResponse response = new ExpenditureDetailResponse();
-            given(expenditureService.getExpenditureDetail(eq(expenditureId), any())).willReturn(response);
+            given(expenditureService.getExpenditureDetail(eq(DEFAULT_EXPENDITURE_ID), any())).willReturn(response);
 
             // when & then
-            mockMvc.perform(get("/expenditures/{id}", expenditureId))
+            mockMvc.perform(get("/expenditures/{id}", DEFAULT_EXPENDITURE_ID))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(expenditureService).getExpenditureDetail(eq(expenditureId), any());
+            verify(expenditureService).getExpenditureDetail(eq(DEFAULT_EXPENDITURE_ID), any());
         }
     }
 
@@ -258,17 +256,16 @@ class ExpenditureControllerTest {
         @DisplayName("지출_소프트_삭제_성공")
         void expenditureSoftDeleteSuccess() throws Exception {
             // given
-            Long expenditureId = 1L;
-            doNothing().when(expenditureService).softDeleteExpenditure(eq(expenditureId), any());
+            doNothing().when(expenditureService).softDeleteExpenditure(eq(DEFAULT_EXPENDITURE_ID), any());
 
             // when & then
-            mockMvc.perform(delete("/expenditures/soft-delete/{id}", expenditureId))
+            mockMvc.perform(delete("/expenditures/soft-delete/{id}", DEFAULT_EXPENDITURE_ID))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(expenditureService).softDeleteExpenditure(eq(expenditureId), any());
+            verify(expenditureService).softDeleteExpenditure(eq(DEFAULT_EXPENDITURE_ID), any());
         }
     }
 
@@ -280,17 +277,16 @@ class ExpenditureControllerTest {
         @DisplayName("지출_하드_삭제_성공")
         void expenditureHardDeleteSuccess() throws Exception {
             // given
-            Long expenditureId = 1L;
-            doNothing().when(expenditureService).hardDeleteExpenditure(eq(expenditureId), any());
+            doNothing().when(expenditureService).hardDeleteExpenditure(eq(DEFAULT_EXPENDITURE_ID), any());
 
             // when & then
-            mockMvc.perform(delete("/expenditures/hard-delete/{id}", expenditureId))
+            mockMvc.perform(delete("/expenditures/hard-delete/{id}", DEFAULT_EXPENDITURE_ID))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(expenditureService).hardDeleteExpenditure(eq(expenditureId), any());
+            verify(expenditureService).hardDeleteExpenditure(eq(DEFAULT_EXPENDITURE_ID), any());
         }
     }
 
@@ -302,13 +298,12 @@ class ExpenditureControllerTest {
         @DisplayName("지출_합계_제외_업데이트_성공")
         void expenditureExcludeUpdateSuccess() throws Exception {
             // given
-            Long expenditureId = 1L;
             ExpenditureExcludeRequest request = new ExpenditureExcludeRequest(true);
 
-            doNothing().when(expenditureService).updateExpenditureExclude(eq(expenditureId), any(), any());
+            doNothing().when(expenditureService).updateExpenditureExclude(eq(DEFAULT_EXPENDITURE_ID), any(), any());
 
             // when & then
-            mockMvc.perform(patch("/expenditures/except/{id}", expenditureId)
+            mockMvc.perform(patch("/expenditures/except/{id}", DEFAULT_EXPENDITURE_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
@@ -316,7 +311,7 @@ class ExpenditureControllerTest {
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.message").exists());
 
-            verify(expenditureService).updateExpenditureExclude(eq(expenditureId), any(), any());
+            verify(expenditureService).updateExpenditureExclude(eq(DEFAULT_EXPENDITURE_ID), any(), any());
         }
     }
 
