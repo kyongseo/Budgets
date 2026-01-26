@@ -4,7 +4,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import ks.com.budgetmanagementproject.feature.role.entity.Role;
 import ks.com.budgetmanagementproject.feature.role.repository.RoleRepository;
-import ks.com.budgetmanagementproject.feature.token.repository.RefreshRepository;
 import ks.com.budgetmanagementproject.feature.token.service.RedisBlackTokenService;
 import ks.com.budgetmanagementproject.feature.token.service.RedisRefreshTokenService;
 import ks.com.budgetmanagementproject.feature.user.dto.LoginRequest;
@@ -49,16 +48,13 @@ class UserServiceTest {
     PasswordEncoder passwordEncoder;
 
     @Mock
-    RefreshRepository refreshRepository;
-
-    @Mock
     JWTUtil jwtUtil;
 
     @InjectMocks
     UserService userService;
 
     @Mock
-    RedisRefreshTokenService redisRefreshTokenService;  // 추가
+    RedisRefreshTokenService redisRefreshTokenService;
 
     @Mock
     RedisBlackTokenService redisBlackTokenService;
@@ -148,7 +144,6 @@ class UserServiceTest {
 
         doNothing().when(jwtUtil).isExpired("RT");
 
-        // Redis Mock 추가
         given(jwtUtil.getUsername("RT")).willReturn("test@test.com");
         given(jwtUtil.getUserId("RT")).willReturn(1L);
         given(jwtUtil.getRole("RT")).willReturn("ROLE_USER");
@@ -173,7 +168,6 @@ class UserServiceTest {
         verify(jwtUtil).getUserId("RT");
         verify(jwtUtil).getRole("RT");
         verify(jwtUtil).createAccessToken(eq(1L), eq("test@test.com"), anyList(), anyLong());
-
     }
 
     @Test
@@ -260,11 +254,9 @@ class UserServiceTest {
         response.setHeader("accessToken", "AT");
         response.setHeader("refreshToken", "RT");
 
-        // JWT Mock 추가
         given(jwtUtil.getExpiration("AT"))
                 .willReturn(System.currentTimeMillis() + 10000);
 
-        // Redis Mock 추가
         doNothing().when(redisRefreshTokenService).deleteRefreshToken("RT");
         doNothing().when(redisBlackTokenService).addBlacklistedToken(eq("AT"), anyLong());
 
@@ -286,11 +278,9 @@ class UserServiceTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         response.setHeader("accessToken", "AT");
 
-        // JWT Mock 추가
         given(jwtUtil.getExpiration("AT"))
                 .willReturn(System.currentTimeMillis() + 10000);
 
-        // Redis Mock 추가
         doNothing().when(redisBlackTokenService).addBlacklistedToken(eq("AT"), anyLong());
 
         // when
@@ -309,7 +299,6 @@ class UserServiceTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         response.setHeader("refreshToken", "RT");
 
-        // Redis Mock 추가
         doNothing().when(redisRefreshTokenService).deleteRefreshToken("RT");
 
         // when

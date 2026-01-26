@@ -28,7 +28,7 @@ public class ExpenditureGuide {
     private BigDecimal todaySpent;
 
     @NotNull(message = "오늘 적정 지출 금액은 필수입니다.")
-    @DecimalMin(value = "0.0", message = "오늘 적정 지출 금액은 0 이상이어야 합니다.")// 오늘 지출 금액
+    @DecimalMin(value = "0.0", message = "오늘 적정 지출 금액은 0 이상이어야 합니다.")
     private BigDecimal appropriateAmount;
 
     @NotBlank(message = "위험도는 필수입니다.")
