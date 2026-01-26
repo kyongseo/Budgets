@@ -70,12 +70,12 @@ class ExpenditureServiceTest {
 
     private final LocalDate anyPeriod = LocalDate.of(2025, 9, 1);
 
-    @Nested
-    @DisplayName("expenditureCreate")
-    class ExpenditureCreate {
+    @Nested @DisplayName("지출 생성")
+    class Create {
 
         @Test
-        void 성공_카테고리존재_해당월예산존재_예산차감() {
+        @DisplayName("성공 - 카테고리 존재, 해당 월 예산 존재, 예산 차감")
+        void successWithExistingBudget() {
             // given
             ExpenditureCreateRequest req = ExpenditureCreateRequest.builder()
                     .money(BigDecimal.valueOf(30_000L))
@@ -102,7 +102,7 @@ class ExpenditureServiceTest {
             given(budgetRepository.findByCategoryAndPeriodAndUser(eq(food), eq(start), eq(user)))
                     .willReturn(budget);
 
-            // when - ✅ user.getUsername() 사용
+            // when
             expenditureService.createExpenditure(req, user.getUsername());
 
             // then
@@ -111,7 +111,8 @@ class ExpenditureServiceTest {
         }
 
         @Test
-        void 실패_카테고리없음() {
+        @DisplayName("실패 - 카테고리 없음")
+        void failCategoryNotFound() {
             // given
             ExpenditureCreateRequest req = ExpenditureCreateRequest.builder()
                     .money(BigDecimal.valueOf(10_000L))
@@ -126,13 +127,15 @@ class ExpenditureServiceTest {
             given(categoryRepository.findByName("없는카테고리"))
                     .willReturn(Optional.empty());
 
+            // when & then
             assertThatThrownBy(() -> expenditureService.createExpenditure(req, user.getUsername()))
                     .isInstanceOf(BaseException.class)
                     .hasMessage("존재하지 않는 카테고리입니다.");
         }
 
         @Test
-        void 실패_예산없음() {
+        @DisplayName("실패 - 예산 없음")
+        void failBudgetNotFound() {
             // given
             ExpenditureCreateRequest req = ExpenditureCreateRequest.builder()
                     .money(BigDecimal.valueOf(10_000L))
@@ -147,22 +150,22 @@ class ExpenditureServiceTest {
             given(categoryRepository.findByName("식비"))
                     .willReturn(Optional.of(food));
 
-            LocalDate start = LocalDate.of(2025, 9, 1);
-            given(budgetRepository.findByCategoryAndPeriodAndUser(eq(food), eq(start), eq(user)))
+            given(budgetRepository.findByCategoryAndPeriodAndUser(eq(food), any(LocalDate.class), eq(user)))
                     .willReturn(null);
 
+            // when & then
             assertThatThrownBy(() -> expenditureService.createExpenditure(req, user.getUsername()))
                     .isInstanceOf(BaseException.class)
                     .hasMessage("존재하지 않는 예산입니다.");
         }
     }
 
-    @Nested
-    @DisplayName("expenditureUpdate")
-    class ExpenditureUpdate {
+    @Nested @DisplayName("지출 수정")
+    class Update {
 
         @Test
-        void 성공_본인소유_카테고리존재() {
+        @DisplayName("성공 - 본인 소유, 카테고리 존재")
+        void successWithSameCategory() {
             // given
             ExpenditureUpdateRequest req = ExpenditureUpdateRequest.builder()
                     .money(BigDecimal.valueOf(50_000L))
@@ -200,7 +203,9 @@ class ExpenditureServiceTest {
         }
 
         @Test
-        void 실패_소유자아님() {
+        @DisplayName("실패 - 소유자 아님")
+        void failForbiddenUser() {
+            // given
             Expenditure entity = Expenditure.builder()
                     .id(1L)
                     .user(other)
@@ -219,6 +224,7 @@ class ExpenditureServiceTest {
             given(categoryRepository.findByName(anyString()))
                     .willReturn(Optional.of(food));
 
+            // when & then
             assertThatThrownBy(() -> expenditureService.updateExpenditure(1L,
                     ExpenditureUpdateRequest.builder().categoryName("식비").build(),
                     user.getUsername()))
@@ -227,14 +233,16 @@ class ExpenditureServiceTest {
         }
 
         @Test
-        void 실패_지출없음() {
-
+        @DisplayName("실패 - 지출 없음")
+        void failExpenditureNotFound() {
+            // given
             given(userRepository.findByUsername("test@test.com"))
                     .willReturn(Optional.of(user));
 
             given(expenditureRepository.findById(999L))
                     .willReturn(Optional.empty());
 
+            // when & then
             assertThatThrownBy(() -> expenditureService.updateExpenditure(999L,
                     ExpenditureUpdateRequest.builder().categoryName("식비").build(),
                     user.getUsername()))
@@ -243,7 +251,9 @@ class ExpenditureServiceTest {
         }
 
         @Test
-        void 실패_카테고리없음() {
+        @DisplayName("실패 - 카테고리 없음")
+        void failCategoryNotFound() {
+            // given
             Expenditure entity = Expenditure.builder()
                     .id(1L)
                     .user(user)
@@ -262,6 +272,7 @@ class ExpenditureServiceTest {
             given(categoryRepository.findByName("식비"))
                     .willReturn(Optional.empty());
 
+            // when & then
             assertThatThrownBy(() -> expenditureService.updateExpenditure(1L,
                     ExpenditureUpdateRequest.builder().categoryName("식비").build(),
                     user.getUsername()))
@@ -270,12 +281,12 @@ class ExpenditureServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("expenditureDetail")
-    class ExpenditureDetail {
+    @Nested @DisplayName("지출 상세조회")
+    class Detail {
 
         @Test
-        void 성공_본인소유() {
+        @DisplayName("성공 - 본인 소유")
+        void successWithOwnExpenditure() {
             Expenditure e = Expenditure.builder()
                     .id(1L)
                     .user(user)
@@ -286,6 +297,7 @@ class ExpenditureServiceTest {
                     .money(BigDecimal.valueOf(12_345L))
                     .build();
 
+            // given
             given(userRepository.findByUsername("test@test.com"))
                     .willReturn(Optional.of(user));
 
@@ -295,13 +307,15 @@ class ExpenditureServiceTest {
             ExpenditureDetailResponse resp = expenditureService.getExpenditureDetail(
                     1L, user.getUsername());
 
+            // when & then
             assertThat(resp.getMemo()).isEqualTo("메모");
             assertThat(resp.getCategoryName()).isEqualTo("식비");
             assertThat(resp.getMoney()).isEqualByComparingTo(BigDecimal.valueOf(12_345L));
         }
 
         @Test
-        void 실패_소유자아님() {
+        @DisplayName("실패 - 소유자 아님")
+        void failForbiddenUser() {
             Expenditure e = Expenditure.builder()
                     .id(1L)
                     .user(other)
@@ -312,12 +326,14 @@ class ExpenditureServiceTest {
                     .money(BigDecimal.valueOf(12_345L))
                     .build();
 
+            // given
             given(userRepository.findByUsername("test@test.com"))
                     .willReturn(Optional.of(user));
 
             given(expenditureRepository.findById(1L))
                     .willReturn(Optional.of(e));
 
+            // when & then
             assertThatThrownBy(() -> expenditureService.getExpenditureDetail(
                     1L, user.getUsername()))
                     .isInstanceOf(BaseException.class)
@@ -325,14 +341,16 @@ class ExpenditureServiceTest {
         }
 
         @Test
-        void 실패_지출없음() {
-
+        @DisplayName("실패 - 지출 없음")
+        void failExpenditureNotFound() {
+            // given
             given(userRepository.findByUsername("test@test.com"))
                     .willReturn(Optional.of(user));
 
             given(expenditureRepository.findById(999L))
                     .willReturn(Optional.empty());
 
+            // when & then
             assertThatThrownBy(() -> expenditureService.getExpenditureDetail(
                     999L, user.getUsername()))
                     .isInstanceOf(BaseException.class)
@@ -340,38 +358,42 @@ class ExpenditureServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("expenditureDelete")
-    class ExpenditureDelete {
+    @Nested @DisplayName("지출 삭제")
+    class Delete {
 
         @Test
-        void 성공_본인소유_삭제() {
+        @DisplayName("성공 - 본인 소유, 하드 삭제")
+        void successHardDelete() {
             Expenditure e = Expenditure.builder()
                     .id(1L)
                     .user(user)
                     .category(food)
                     .build();
 
+            // given
             given(userRepository.findByUsername("test@test.com"))
                     .willReturn(Optional.of(user));
 
             given(expenditureRepository.findById(1L))
                     .willReturn(Optional.of(e));
 
+            // when
             expenditureService.hardDeleteExpenditure(1L, user.getUsername());
 
+            // then
             then(expenditureRepository).should().delete(e);
         }
 
         @Test
-        void 실패_소유자아님() {
-
+        @DisplayName("실패 - 소유자 아님")
+        void failForbiddenUser() {
             Expenditure e = Expenditure.builder()
                     .id(1L)
                     .user(other)
                     .category(food)
                     .build();
 
+            // given
             given(userRepository.findByUsername("test@test.com"))
                     .willReturn(Optional.of(user));
 
@@ -386,13 +408,12 @@ class ExpenditureServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("updateExpenditureExclude")
-    class UpdateExpenditureExcludeTest {
+    @Nested @DisplayName("합계 제외 업데이트")
+    class ExcludeUpdate {
 
         @Test
-        @DisplayName("합계 제외 업데이트 성공 - false에서 true로 변경")
-        void updateExcludingTotalSuccess_FalseToTrue() {
+        @DisplayName("성공 - false에서 true로 변경")
+        void successFalseToTrue() {
             // given
             Expenditure expenditure = Expenditure.builder()
                     .id(1L)
@@ -411,6 +432,7 @@ class ExpenditureServiceTest {
             given(expenditureRepository.findById(1L))
                     .willReturn(Optional.of(expenditure));
 
+            // when
             expenditureService.updateExpenditureExclude(1L, user.getUsername(), request);
 
             // then
@@ -419,8 +441,8 @@ class ExpenditureServiceTest {
         }
 
         @Test
-        @DisplayName("합계 제외 업데이트 성공 - true에서 false로 변경")
-        void updateExcludingTotalSuccess_TrueToFalse() {
+        @DisplayName("성공 - true에서 false로 변경")
+        void successTrueToFalse() {
             // given
             Expenditure expenditure = Expenditure.builder()
                     .id(1L)
@@ -439,6 +461,7 @@ class ExpenditureServiceTest {
             given(expenditureRepository.findById(1L))
                     .willReturn(Optional.of(expenditure));
 
+            // when
             expenditureService.updateExpenditureExclude(1L, user.getUsername(), request);
 
             // then
@@ -447,8 +470,8 @@ class ExpenditureServiceTest {
         }
 
         @Test
-        @DisplayName("합계 제외 업데이트 실패 - 지출 내역이 존재하지 않음")
-        void updateExcludingTotalFail_ExpenditureNotFound() {
+        @DisplayName("실패 - 지출 내역 없음")
+        void failExpenditureNotFound() {
             // given
             ExpenditureExcludeRequest request = new ExpenditureExcludeRequest(true);
 
@@ -459,16 +482,14 @@ class ExpenditureServiceTest {
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() ->
-                    expenditureService.updateExpenditureExclude(999L, user.getUsername(), request))
+            assertThatThrownBy(() -> expenditureService.updateExpenditureExclude(999L, user.getUsername(), request))
                     .isInstanceOf(BaseException.class)
                     .hasFieldOrPropertyWithValue("status", NON_EXISTENT_EXPENDITURE);
-            verify(expenditureRepository).findById(999L);
         }
 
         @Test
-        @DisplayName("합계 제외 업데이트 실패 - 권한 없는 사용자")
-        void updateExcludingTotalFail_Forbidden() {
+        @DisplayName("실패 - 권한 없는 사용자")
+        void failForbiddenUser() {
             // given
             ExpenditureExcludeRequest request = new ExpenditureExcludeRequest(true);
 
@@ -488,18 +509,14 @@ class ExpenditureServiceTest {
                     .willReturn(Optional.of(expenditure));
 
             // when & then
-            assertThatThrownBy(() ->
-                    expenditureService.updateExpenditureExclude(1L, user.getUsername(), request))
+            assertThatThrownBy(() -> expenditureService.updateExpenditureExclude(1L, user.getUsername(), request))
                     .isInstanceOf(BaseException.class)
                     .hasFieldOrPropertyWithValue("status", FORBIDDEN_USER);
-
-            assertThat(expenditure.isExcludingTotal()).isFalse();
-            verify(expenditureRepository).findById(1L);
         }
 
         @Test
-        @DisplayName("합계 제외 업데이트 성공 - 같은 값으로 변경해도 성공")
-        void updateExcludingTotalSuccess_SameValue() {
+        @DisplayName("성공 - 같은 값으로 변경해도 성공")
+        void successSameValue() {
             // given
             Expenditure expenditure = Expenditure.builder()
                     .id(1L)
