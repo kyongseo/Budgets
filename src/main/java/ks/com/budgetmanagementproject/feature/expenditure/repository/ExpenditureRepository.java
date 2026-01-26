@@ -37,7 +37,7 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure,Long> {
             @Param("maxMoney") BigDecimal  maxMoney
     );
 
-    // 합계(뷰 범위) — SUM(long) ⇒ Long, COALESCE 0L
+    // 합계(뷰 범위)
     @Query("""
         select COALESCE(sum(e.money), 0L)
         from Expenditure e
@@ -56,7 +56,7 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure,Long> {
             @Param("maxMoney") BigDecimal maxMoney
     );
 
-    // 3) 카테고리별 총합(전체): ifNull -> COALESCE, 별칭 추가
+    // 카테고리별 총합(전체)
     @Query("""
         select COALESCE(sum(e.money), 0L)
         from Expenditure e
@@ -69,24 +69,20 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure,Long> {
             @Param("user") User user
     );
 
-    // 4) 가이드: round/서브쿼리 이슈 -> FUNCTION 사용(Hibernate) 또는 네이티브/서비스단 분리
+    // 가이드
     @Query("""
     select new ks.com.budgetmanagementproject.feature.expenditure.dto.ExpenditureGuide(
-        a.category,
-        sum(a.money),
-        COALESCE((
+        a.category.name, sum(a.money),COALESCE((
             select sum(b.money) / :period
             from Budget b
             where b.period = :start
               and b.user = :user
               and b.category = a.category
-        ), 0),
-        '0%'
-    )
+        ), 0), 0)
     from Expenditure a
     where a.user = :user
       and a.period = :today
-    group by a.category
+    group by a.category.id, a.category.name
     """)
     List<ExpenditureGuide> findByExpenditureAmount(
             @Param("user") User user,
