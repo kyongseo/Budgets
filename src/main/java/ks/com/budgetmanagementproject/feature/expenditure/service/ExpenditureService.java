@@ -130,10 +130,13 @@ public class ExpenditureService {
     @Transactional
     public void softDeleteExpenditure(Long expenditureId, String username) {
         User user = findUserByUsername(username);
-        Expenditure expenditure = findExpenditureById(expenditureId);
-
-        validateExpenditureOwner(expenditure, user);
-        expenditure.softDeleted();
+        Expenditure e = expenditureRepository.findById(expenditureId)
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_EXPENDITURE));
+        if (!e.isOwnedBy(user)) {
+            throw new BaseException(BaseExceptionStatus.FORBIDDEN_USER);
+        }
+        e.softDeleted();
+        expenditureRepository.save(e);
     }
 
     /**
@@ -304,18 +307,16 @@ public class ExpenditureService {
                     BigDecimal appropriateAmount = guide.getAppropriateAmount();
                     BigDecimal todaySpent = guide.getTodaySpent();
 
-                    // 적정 지출 금액이 0 이하면 최소 금액으로 설정
                     if (appropriateAmount == null || appropriateAmount.compareTo(BigDecimal.ZERO) <= 0) {
                         appropriateAmount = BigDecimal.valueOf(MINIMUM_DAILY_BUDGET);
                         guide.setAppropriateAmount(appropriateAmount);
                     }
 
-                    // 위험도 계산 (실제 지출 / 적정 지출 * 100)
                     int risk = todaySpent
                             .multiply(BigDecimal.valueOf(100))
                             .divide(appropriateAmount, 0, RoundingMode.HALF_UP)
                             .intValue();
-                    guide.setRisk(risk);  // ✅ int 타입으로 설정
+                    guide.setRisk(risk);
                 })
                 .map(ExpenditureGuide::getTodaySpent)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
