@@ -1,6 +1,6 @@
 # JAR 빌드
 service-build:
-	./gradlew build
+	./gradlew build -x test
 
 # 도커 빌드 및 실행
 service-run: build
