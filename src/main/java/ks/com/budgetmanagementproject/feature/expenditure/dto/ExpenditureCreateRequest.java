@@ -27,7 +27,7 @@ public class ExpenditureCreateRequest {
     @Size(max = 20, message = "카테고리 이름은 20자를 초과할 수 없습니다.")
     private String categoryName;
 
-    @Schema(description = "지출 일시", example = "2025-01-01")
+    @Schema(description = "지출 일시", example = "2026-01-01")
     @NotNull(message = "지출 일시를 설정해주세요.")
     @PastOrPresent(message = "지출 일시는 현재 또는 과거 날짜여야 합니다.")
     private LocalDate period;

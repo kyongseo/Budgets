@@ -29,7 +29,7 @@ public class BudgetSettingRequest {
     @Size(max = 20, message = "카테고리 이름은 20자를 초과할 수 없습니다.")
     private String categoryName;
 
-    @Schema(description = "기간", example = "2023-11")
+    @Schema(description = "기간", example = "2026-01")
     @NotNull(message = "기간을 설정해주세요.")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM", timezone = "Asia/Seoul")
     private YearMonth period;
