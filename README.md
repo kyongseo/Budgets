@@ -159,25 +159,33 @@ JWT_SECRET=${JWT_SECRET}
 ### 실행 방법
 ```bash
 # 1. 환경 변수 설정
+# Docker 및 환경 변수 설정
 make service-build
-# .env 파일 수정
 
-# 2. 데이터베이스 마이그레이션
-./gradlew flywayMigrate
+# .env 파일 수정 (필요시)
+vim .env
 
-# 3. 애플리케이션 실행
+# 2. 애플리케이션 실행
 ./gradlew bootRun
 
-# 4. API 문서 확인
-# http://localhost:8080/swagger-ui.html
+# 3. API 문서 확인
+로컬: http://localhost:9091/swagger-ui/index.html
+배포: https://kyongseo.github.io/Budgets/
 
-# 5. test coverage 확인
- ./gradlew clean test
- 
+# 4. Swagger 문서 업데이트 (API 변경 시)
+# 방법 1: 수동 업데이트
+# 1) 애플리케이션 실행 (다른 터미널)
+./gradlew bootRun
+
+# 2) OpenAPI JSON 생성 및 배포
+make swagger-deploy
+
+# 방법 2: 자동 업데이트 (앱 시작 + JSON 생성)
+make swagger-update
+
 ```
 
 ---
 ## 📚 프로젝트 관리
-- 일정 관리: [일정관리](https://great-product-fd5.notion.site/b7b4131ed6874ff6825c62499d183230?source=copy_link)
-- API 문서: Swagger UI 자동 생성 
-- 버전 관리: Git Flow 전략 적용
+- 일정 관리: [일정관리](https://www.notion.so/b7b4131ed6874ff6825c62499d183230)
+- API 문서: [Swagger UI](https://kyongseo.github.io/Budgets/#/)
