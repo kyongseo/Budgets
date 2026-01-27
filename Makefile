@@ -4,6 +4,10 @@
 service-build:
 	./gradlew build -x test
 
+# 앱 실행
+service-boot-run:
+	./gradlew bootRun
+
 # 도커 빌드 및 실행
 service-run: service-build
 	docker-compose up --build -d
