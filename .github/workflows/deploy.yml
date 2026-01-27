@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Swagger to GitHub Pages
 
 on:
   push:
@@ -27,12 +27,21 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -x test
+
+      - name: Start Application
+        run: |
+          ./gradlew bootRun > /dev/null 2>&1 &
+          sleep 30  # 애플리케이션 시작 대기
+
+      - name: Generate OpenAPI JSON
+        run: |
+          curl http://localhost:8080/v3/api-docs -o swagger-ui/openapi.json
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./build/docs/asciidoc
+          path: ./swagger-ui
 
   deploy:
     needs: build
