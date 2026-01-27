@@ -36,7 +36,7 @@ jobs:
 
       - name: Generate OpenAPI JSON
         run: |
-          curl http://localhost:8080/v3/api-docs -o swagger-ui/openapi.json
+          curl http://localhost:9091/v3/api-docs -o swagger-ui/openapi.json
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
