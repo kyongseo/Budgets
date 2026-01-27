@@ -42,6 +42,12 @@ spring:
       mode: always
       data-locations: classpath:data.sql
 
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health
+
 logging:
   level:
     ks.com.budgetmanagementproject: DEBUG
