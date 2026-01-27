@@ -17,21 +17,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          node-version: 20
+          java-version: '17'
+          distribution: 'temurin'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Build
-        run: npm run build
+      - name: Build with Gradle
+        run: ./gradlew build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./build/docs/asciidoc
 
   deploy:
     needs: build
