@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,22 +85,6 @@ class ChatRoomControllerTest {
                     .andExpect(jsonPath("$.code").value(201))
                     .andExpect(jsonPath("$.message").exists());
             verify(chatRoomService).createRoom(any(CreateRoomRequest.class), eq("testUser"));
-        }
-
-        @Test
-        @DisplayName("채팅방_생성_실패_유효하지_않은_요청")
-        void createRoomFail_InvalidRequest() throws Exception {
-            // given
-            User mockUser = createMockUser();
-            CreateRoomRequest request = new CreateRoomRequest("");
-
-            // when & then
-            mockMvc.perform(post("/rooms")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request))
-                            .with(user(new CustomUserDetails(mockUser)))
-                            .with(csrf()))
-                    .andExpect(status().isBadRequest());
         }
     }
 

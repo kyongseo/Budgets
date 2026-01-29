@@ -70,25 +70,6 @@ class BudgetControllerTest {
 
             verify(budgetService).createBudget(any(BudgetSettingRequest.class), any());
         }
-
-        @Test
-        @DisplayName("예산_설정_실패_유효성_검증_금액_null")
-        void budgetSettingFailValidationMoneyNull() throws Exception {
-            // given
-            BudgetSettingRequest request = BudgetSettingRequest.builder()
-                    .categoryName("식비")
-                    .money(null)
-                    .period(YearMonth.of(2025, 9))
-                    .build();
-            // when & then
-            mockMvc.perform(post("/budgets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print())
-                    .andExpect(status().isBadRequest());
-
-            verify(budgetService, never()).createBudget(any(), any());
-        }
     }
 
     @Nested

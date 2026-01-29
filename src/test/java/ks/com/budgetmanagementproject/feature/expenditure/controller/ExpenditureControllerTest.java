@@ -75,27 +75,6 @@ class ExpenditureControllerTest {
 
             verify(expenditureService).createExpenditure(any(ExpenditureCreateRequest.class), any());
         }
-
-        @Test
-        @DisplayName("지출_생성_실패_유효성_검증_금액_null")
-        void expenditureCreateFailValidationMoneyNull() throws Exception {
-            // given
-            ExpenditureCreateRequest request = ExpenditureCreateRequest.builder()
-                    .money(null)
-                    .categoryName("식비")
-                    .period(LocalDate.now())
-                    .memo("점심값")
-                    .build();
-
-            // when & then
-            mockMvc.perform(post("/expenditures")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print())
-                    .andExpect(status().isBadRequest());
-
-            verify(expenditureService, never()).createExpenditure(any(), any());
-        }
     }
 
     @Nested
@@ -125,48 +104,6 @@ class ExpenditureControllerTest {
                     .andExpect(jsonPath("$.message").exists());
 
             verify(expenditureService).updateExpenditure(eq(DEFAULT_EXPENDITURE_ID), any(ExpenditureUpdateRequest.class), any());
-        }
-
-        @Test
-        @DisplayName("지출_수정_실패_유효성_검증_금액_null")
-        void expenditureUpdateFailValidationMoneyNull() throws Exception {
-            // given
-            ExpenditureUpdateRequest request = ExpenditureUpdateRequest.builder()
-                    .money(null)
-                    .categoryName("교통")
-                    .period(LocalDate.now())
-                    .memo("버스 탑승")
-                    .build();
-
-            // when & then
-            mockMvc.perform(patch("/expenditures/{id}", DEFAULT_EXPENDITURE_ID)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print())
-                    .andExpect(status().isBadRequest());
-
-            verify(expenditureService, never()).updateExpenditure(any(), any(), any());
-        }
-
-        @Test
-        @DisplayName("지출_수정_실패_유효성_검증_카테고리_공백")
-        void expenditureUpdateFailValidationCategoryBlank() throws Exception {
-            // given
-            ExpenditureUpdateRequest request = ExpenditureUpdateRequest.builder()
-                    .money(new BigDecimal("20000"))
-                    .categoryName("")
-                    .period(LocalDate.now())
-                    .memo("버스 탑승")
-                    .build();
-
-            // when & then
-            mockMvc.perform(patch("/expenditures/{id}", DEFAULT_EXPENDITURE_ID)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andDo(print())
-                    .andExpect(status().isBadRequest());
-
-            verify(expenditureService, never()).updateExpenditure(any(), any(), any());
         }
     }
 

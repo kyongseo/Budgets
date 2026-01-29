@@ -51,8 +51,6 @@ class BudgetServiceTest {
     @Mock
     UserRepository userRepository;
     @InjectMocks
-    BudgetService budgetService;
-    @InjectMocks
     ExpenditureService expenditureService;
     @Mock
     ExpenditureRepository expenditureRepository;

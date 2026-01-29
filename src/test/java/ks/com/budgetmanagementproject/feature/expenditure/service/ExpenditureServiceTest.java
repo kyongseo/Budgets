@@ -35,21 +35,18 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verify;
+
 @ExtendWith(MockitoExtension.class)
 class ExpenditureServiceTest {
 
     @Mock
     ExpenditureRepository expenditureRepository;
-
     @Mock
     BudgetCategoryRepository categoryRepository;
-
     @Mock
     BudgetRepository budgetRepository;
-
     @Mock
     UserRepository userRepository;
-
     @InjectMocks
     ExpenditureService expenditureService;
 
