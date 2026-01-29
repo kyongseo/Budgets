@@ -2,7 +2,7 @@
 
 # JAR 빌드
 service-build:
-	./gradlew build -x test
+	./gradlew build
 
 # 앱 실행
 service-boot-run:
@@ -10,6 +10,7 @@ service-boot-run:
 
 # 도커 빌드 및 실행
 service-run: service-build
+	@export DOCKER_API_VERSION=1.44
 	docker-compose up --build -d
 
 # 도커 컨테이너 재시작
