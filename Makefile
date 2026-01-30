@@ -1,4 +1,5 @@
 .PHONY: service-build service-run service-restart service-clean swagger-generate swagger-deploy swagger-update
+export DOCKER_API_VERSION=1.44
 
 # JAR 빌드
 service-build:
@@ -9,8 +10,7 @@ service-boot-run:
 	./gradlew bootRun
 
 # 도커 빌드 및 실행
-service-run: service-build
-	@export DOCKER_API_VERSION=1.44
+service-run:
 	docker-compose up --build -d
 
 # 도커 컨테이너 재시작
