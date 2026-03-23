@@ -9,19 +9,18 @@ import ks.com.budgetmanagementproject.feature.user.entity.User;
 import ks.com.budgetmanagementproject.feature.user.repository.UserRepository;
 import ks.com.budgetmanagementproject.global.common.logger.BaseException;
 import ks.com.budgetmanagementproject.global.common.logger.BaseExceptionStatus;
-import ks.com.budgetmanagementproject.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,6 +31,9 @@ public class BudgetService {
     private final UserRepository userRepository;
     private final BudgetRepository budgetRepository;
     private final BudgetCategoryRepository categoryRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String BUDGET_RATIO_KEY = "budget:recommend:ratios";
 
     /**
      * 예산 설정
@@ -94,24 +96,73 @@ public class BudgetService {
     }
 
     /**
-     * 예산 추천
+     * 예산 추천 (Redis 캐싱 적용)
      * @return list
      */
     @Transactional(readOnly = true)
     public BudgetRecommendListResponse budgetRecommend(Long totalAmount) {
-        List<Budget> allBudgets = budgetRepository.findAllWithCategory();
+        StopWatch sw = new StopWatch();
+        sw.start();
 
-        if (allBudgets.isEmpty()) {
-            return BudgetRecommendListResponse.from(Collections.emptyList());
+        // 1. Redis에서 캐시된 비율 데이터 조회
+        Map<String, Double> cachedRatios = (Map<String, Double>) redisTemplate.opsForValue().get(BUDGET_RATIO_KEY);
+
+        // 2. 캐시가 없으면 DB에서 계산 후 캐싱
+        if (cachedRatios == null) {
+            log.info(">>>> [BudgetRecommend] 캐시가 없어 실시간 통계 계산을 수행합니다.");
+            cachedRatios = calculateAndCacheRatios();
         }
 
-        BigDecimal totalBudgetSum = calculateTotalBudgetSum(allBudgets);
-        Map<BudgetCategory, BigDecimal> categorySum = calculateCategorySum(allBudgets);
-        List<BudgetRecommendResponse> responseList = createRecommendationList(
-                categorySum, totalBudgetSum, totalAmount
-        );
+        final Map<String, Double> finalRatios = cachedRatios;
+
+        // 3. 캐시된 비율로 추천 금액 산출
+        List<BudgetRecommendResponse> responseList = categoryRepository.findAll().stream()
+                .map(category -> {
+                    Double ratio = finalRatios.getOrDefault(String.valueOf(category.getId()), 0.0);
+                    long recommendedAmount = Math.round(totalAmount * ratio);
+                    return BudgetRecommendResponse.builder()
+                            .category(BudgetCategoryResponse.from(category))
+                            .average(recommendedAmount)
+                            .build();
+                })
+                .sorted(Comparator.comparing(r -> r.getCategory().getId()))
+                .toList();
+
+        sw.stop();
+        log.info(">>>> [성능 측정] 추천 로직 전체 소요 시간: {} ms", sw.getTotalTimeMillis());
 
         return BudgetRecommendListResponse.from(responseList);
+    }
+
+    /**
+     * 전체 예산 통계 계산 및 Redis 저장
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Double> calculateAndCacheRatios() {
+        List<Budget> allBudgets = budgetRepository.findAllWithCategory();
+        if (allBudgets.isEmpty()) return Collections.emptyMap();
+
+        BigDecimal totalBudgetSum = allBudgets.stream()
+                .map(Budget::getMoney)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Map<String, BigDecimal> categorySum = allBudgets.stream()
+                .collect(Collectors.groupingBy(
+                        b -> String.valueOf(b.getCategory().getId()),
+                        Collectors.reducing(BigDecimal.ZERO, Budget::getMoney, BigDecimal::add)
+                ));
+
+        Map<String, Double> ratios = categorySum.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().divide(totalBudgetSum, 4, RoundingMode.HALF_UP).doubleValue()
+                ));
+
+        // Redis에 24시간 동안 저장
+        redisTemplate.opsForValue().set(BUDGET_RATIO_KEY, ratios, 24, TimeUnit.HOURS);
+        log.info(">>>> [BudgetRecommend] 통계 데이터 캐싱 완료 (Key: {})", BUDGET_RATIO_KEY);
+
+        return ratios;
     }
 
     private User findUserByUsername(String username) {
@@ -125,8 +176,8 @@ public class BudgetService {
     }
 
     private Budget findBudgetById(Long budgetId) {
-        return budgetRepository.findById(budgetId)
-                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_BUDGET));
+        return budgetId != null ? budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new BaseException(BaseExceptionStatus.NON_EXISTENT_BUDGET)) : null;
     }
 
     private void validateDuplicateBudget(BudgetCategory category, LocalDate period, User user) {
@@ -134,54 +185,5 @@ public class BudgetService {
         if (existingBudget != null) {
             throw new BaseException(BaseExceptionStatus.DUPLICATE_BUDGET);
         }
-    }
-
-    private BigDecimal calculateTotalBudgetSum(List<Budget> budgets) {
-        return budgets.stream()
-                .map(Budget::getMoney)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private Map<BudgetCategory, BigDecimal> calculateCategorySum(List<Budget> budgets) {
-        return budgets.stream()
-                .collect(Collectors.groupingBy(
-                        Budget::getCategory,
-                        Collectors.reducing(
-                                BigDecimal.ZERO,
-                                Budget::getMoney,
-                                BigDecimal::add
-                        )
-                ));
-    }
-
-    private List<BudgetRecommendResponse> createRecommendationList(
-            Map<BudgetCategory, BigDecimal> categorySum,
-            BigDecimal totalBudgetSum,
-            Long totalAmount
-    ) {
-        return categorySum.entrySet().stream()
-                .map(entry -> createRecommendResponse(entry, totalBudgetSum, totalAmount))
-                .sorted(Comparator.comparing(r -> r.getCategory().getId()))
-                .toList();
-    }
-
-    private BudgetRecommendResponse createRecommendResponse(
-            Map.Entry<BudgetCategory, BigDecimal> entry,
-            BigDecimal totalBudgetSum,
-            Long totalAmount
-    ) {
-        BudgetCategory category = entry.getKey();
-        BigDecimal categoryMoney = entry.getValue();
-
-        BigDecimal ratio = categoryMoney.divide(totalBudgetSum, 10, RoundingMode.HALF_UP);
-        long recommendedAmount = BigDecimal.valueOf(totalAmount)
-                .multiply(ratio)
-                .setScale(0, RoundingMode.HALF_UP)
-                .longValue();
-
-        return BudgetRecommendResponse.builder()
-                .category(BudgetCategoryResponse.from(category))
-                .average(recommendedAmount)
-                .build();
     }
 }
