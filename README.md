@@ -166,7 +166,7 @@ make service-build
 vim .env
 
 # 2. 애플리케이션 실행
-./gradlew bootRun
+make service-run
 
 # 3. API 문서 확인
 로컬: http://localhost:9091/swagger-ui/index.html
