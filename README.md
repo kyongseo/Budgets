@@ -1,14 +1,13 @@
 # 예산 관리 어플리케이션
 
 ## 📋목차
-- [개요](#개요)
-- [Skils](#skils)
-- [ERD](#erd)
-- [프로젝트 설계 및 일정관리](#프로젝트-설계-및-일정관리)
-  - [API Reference](#api-reference)
-  - [API 구현과정 및 고려사항](#api-구현과정-및-고려사항)
-- [Test](#test)
-  - [주요 시나리오](#주요-시나리오)
+- [🎯 프로젝트 개요](#프로젝트-개요)
+- [🛠 기술 스택](#-기술-스택)
+- [🏗 시스템 아키텍처](#-시스템-아키텍처)
+- [📡 API 명세](#-api-명세)
+- [✨ 주요 기능 개발](#-주요-기능-개발)
+- [🧪 테스트 전략](#-테스트-전략)
+- [📚 프로젝트 관리](#-프로젝트-관리)
 
 <br/>
 
@@ -16,20 +15,20 @@
 ## 🎯프로젝트 개요
 
 - 개발기간: 2025.09 ~ 2025.12
-
 - 사용자가 월별 예산을 설정하고 지출을 기록하여 재무 목표를 달성할 수 있도록 돕는 개인 재무 관리 애플리케이션입니다.
 
 #### 핵심 가치
 
-- `📊 데이터 기반 예산 추천`: 사용자 히스토리 기반 맞춤형 예산 설계
-- `🎯 실시간 지출 가이드`: 현재 지출 패턴 분석 및 오늘의 지출 권장액 제공 
-- `🔒 안전한 인증 체계`: Spring Security + JWT 기반 보안 인증 
-- `⚡ 고성능 처리`: Redis 캐싱 및 최적화된 쿼리 설계
+- `📊 통계 기반 추천`: 전체 사용자 데이터를 분석하여 최적의 예산 배분 제안
+- `🎯 실시간 피드백`: 오늘의 권장 지출액과 소비 패턴 분석 가이드 제공
+- `🔒 보안 중심 설계`: Spring Security와 JWT, Redis를 활용한 견고한 인증 체계 
+- `⚡ 확장성 고려`: Kafka와 WebSocket을 활용한 실시간 채팅 및 알림 시스템
 
 <br/>
 
 ---
 ## 🛠 기술 스택
+
 언어 및 프레임워크: ![Static Badge](https://img.shields.io/badge/Java-red)
 ![Static Badge](https://img.shields.io/badge/SpringBoot-grean)
 ![Static Badge](https://img.shields.io/badge/SpringDataJPA-orange)
@@ -42,89 +41,67 @@ ETC: ![Static Badge](https://img.shields.io/badge/SpringSecurity-pink)
 <br/>
 
 ---
-## 🗄 데이터베이스 설계
-
-### ERD
-![img_2.png](src/main/resources/static/img/erd.png)
-
-- 주요 테이블
-  - users: 사용자 정보 
-  - budgets: 카테고리별 월간 예산
-  - expenditures: 지출 내역
-  - categories: 예산/지출 카테고리
-
-## 📡 API 명세
-![img_1.png](src/main/resources/static/img/api.png)
-<br/>
-
-## 🏗 시스템 아키텍처
+### 🏗 시스템 아키텍처
 ![img.png](src/main/resources/static/img/Architecture.png)
 
 <br/>
 
-## ✨ 주요 기능
+### ERD
+![img_2.png](src/main/resources/static/img/erd.png)
+
+<br/>
+
+## 📡 API 명세
+![img_1.png](src/main/resources/static/img/api.png)
+
+<br/>
+
+## ✨ 주요 기능 개발
 
 <details> 
  
-<summary>예산 관리 (Budgets) - click</summary>
+<summary>예산 관리 및 추천 엔진 (Budgets) - click</summary>
 
 #### 예산 관리 (Budgets)
-
-- 카테고리별 월간 예산 설정 및 수정
-- 데이터 기반 예산 추천 시스템 
-  - 전체 사용자 예산 데이터 기반 카테고리별 비율 계산 
-  - 사용자 총 예산 대비 최적 카테고리별 예산 배분 추천 
-  - 통계 기반 예산 설계 가이드 제공
+- 설계 의도: 사용자가 막연하게 예산을 설정하는 대신, 타 사용자의 데이터를 기반으로 합리적인 가이드 제공
+- 구현 핵심:
+  - 통계 기반 배분 알고리즘: 전체 사용자의 카테고리별 예산 비율을 산출하여, 사용자의 총 예산액에 맞춰 자동 배분하는 로직 구현
+  - 데이터 무결성: 카테고리별 예산 설정 및 Soft/Hard Delete 지원을 통해 분석 데이터의 정확성 유지
 
 </details> 
 
 <details> 
 
-<summary>지출 관리 (Expenditures) - click</summary>
+<summary>지출 관리 및 지능형 가이드 (Expenditures) - click</summary>
 
 #### 지출 관리 (Expenditures)
-- 지출 내역 CRUD 기능
-- 고급 필터링 조회 
-  - 기간별 (월/일 단위)
-  - 카테고리별 
-  - 금액 범위 
-  - 키워드 검색
-- 합계 제외 기능 (통계에서 특정 지출 제외)
-- 오늘의 지출 추천 및 가이드
-- 자동화된 이메일 알림 시스템 
-  - 매일 오전 08:00 - 오늘의 지출 추천 안내 발송 
-  - 매일 오후 22:00 - 오늘의 지출 내역 안내 발송 
-  - Thymeleaf 템플릿 기반 HTML 이메일
+- 설계 의도: 사용자가 스스로 소비를 통제할 수 있도록 자동화된 피드백 루프 구축
+- 구현 핵심:
+  - 오늘의 지출 추천 (매일 08:00): 남은 예산을 남은 일수로 계산하여 오늘 사용 가능한 적정 금액을 매일 아침 전송
+  - 오늘의 지출 안내 (매일 22:00): 오늘 사용한 금액과 권장 금액을 비교하여 소비 패턴에 대한 요약 보고서 전송
+  - 동적 쿼리 최적화: 기간, 카테고리, 금액 범위 등 다각도 조회를 위한 고성능 필터링 기능
 
 </details> 
 
 <details> 
 
-<summary>사용자 관리 (Users) - click</summary>
+<summary>실시간 채팅 인프라 (Chat & Messaging) - click</summary>
 
-#### 사용자 관리 (Users)
-- 회원가입 및 로그인
-- JWT 기반 인증
-- BCrypt 비밀번호 암호화
+#### 채팅 (Chat)
+- 설계 의도: 대규모 메시지 처리가 가능한 채팅 시스템 구축
+- 구현 핵심:
+  - Kafka 기반 브로드캐스팅: WebSocket으로 수신된 메시지를 Kafka Topic으로 발행하여 다중 서버 환경에서도 메시지 유실 없는 실시간 전송 보장
+  - 비동기 처리: 메시지 저장과 발송을 비동기적으로 분리하여 대량의 트래픽에도 낮은 응답 지연 시간 유지
 
 </details>
 
 <br/>
 
 ---
-## Test
-
-- 테스트 전략 
-  - 단위 테스트: Service/Repository 레벨 
-    - `@DataJpaTest`: Repository 계층 
-    - `Mockito`: Service 로직 격리 테스트
-
-  - 통합 테스트: API 레벨 
-    - `@WebMvcTest`: Controller 계층
-
-- 커버리지 목표 
-  - 전체 라인 커버리지: 70% 이상 
-  - 핵심 도메인 (Service): 80% 이상
+##  🧪 테스트 전략
+- Unit Test: Mockito를 사용하여 Service 레이어의 비즈니스 로직을 독립적으로 검증
+- Integration Test: @SpringBootTest를 활용하여 API 엔드포인트와 DB/Redis/Kafka 연동 테스트 수행
+- Coverage: 핵심 도메인 로직(Service)에 대해 80% 이상의 테스트 커버리지를 목표로 설계
 
 ---
 ## ⚙️ 환경 설정
@@ -158,21 +135,18 @@ JWT_SECRET=${JWT_SECRET}
 
 ### 실행 방법
 ```bash
-# 1. 환경 변수 설정
-# Docker 및 환경 변수 설정
+# 서비스 빌드 및 실행
 make service-build
+make service-run
 
 # .env 파일 수정 (필요시)
 vim .env
 
-# 2. 애플리케이션 실행
-./gradlew bootRun
-
-# 3. API 문서 확인
+# API 문서 확인
 로컬: http://localhost:9091/swagger-ui/index.html
 배포: https://kyongseo.github.io/Budgets/
 
-# 4. Swagger 문서 업데이트 (API 변경 시)
+# Swagger 문서 업데이트 (API 변경 시)
 # 방법 1: 수동 업데이트
 # 1) 애플리케이션 실행 (다른 터미널)
 make service-boot-run
@@ -189,3 +163,34 @@ make swagger-update
 ## 📚 프로젝트 관리
 - API 문서: [Swagger API](https://kyongseo.github.io/Budgets/#/)
 - 일정 관리: [일정관리](https://www.notion.so/b7b4131ed6874ff6825c62499d183230)
+
+
+
+
+---
+- env 파일 예시
+```bash
+# 공통 Postgresql 설정
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=budgetdb
+POSTGRES_USER=ks
+POSTGRES_PASSWORD=1234!
+POSTGRESQL_URL=jdbc:postgresql://localhost:5432/budgetdb
+
+# 공통 redis 설정
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=1234!
+
+# 공통 kafka 설정
+KAFKA_SERVER=localhost:9092
+KAFKA_GROUP_ID=chat-websocket-group
+
+# mail
+MAIL_USERNAME=pokj9800113@gmail.com
+MAIL_PASSWORD=amui cqpl xmyi fvdt
+
+# JWT 설정
+JWT_SECRET=vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb
+```

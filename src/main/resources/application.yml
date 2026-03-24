@@ -2,11 +2,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: metrics,health,prometheus
-  metrics:
-    export:
-      prometheus:
-        enabled: true
+        include: metrics,health
 
 spring:
   application:

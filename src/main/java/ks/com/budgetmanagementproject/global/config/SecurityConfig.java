@@ -6,6 +6,7 @@ import ks.com.budgetmanagementproject.feature.token.service.RedisRefreshTokenSer
 import ks.com.budgetmanagementproject.global.jwt.JWTFilter;
 import ks.com.budgetmanagementproject.global.jwt.JWTUtil;
 import ks.com.budgetmanagementproject.global.jwt.LoginFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,8 +15,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -25,16 +24,15 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
     private final RoleRepository roleRepository;
     private final RedisRefreshTokenService redisRefreshTokenService;
     private final RedisBlackTokenService redisBlackTokenService;
 
-
-    String[] allAllowPage = new String[] {
+    private final String[] allAllowPage = new String[] {
             "/", "/chat.html", "/favicon.ico",
             "/static/**", "/js/**",
             "/ws-stomp",
@@ -42,7 +40,7 @@ public class SecurityConfig {
             "/users/**", "/reissue", "/error", "/chat", "/chat/**", "/rooms/**"
     };
 
-    String[] swaggerAllowPage = new  String[] {
+    private final String[] swaggerAllowPage = new  String[] {
             "/swagger",
             "/swagger-ui.html",
             "/swagger-ui/**",
@@ -51,16 +49,8 @@ public class SecurityConfig {
             "/v3/api-docs/**"
     };
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil, RoleRepository roleRepository, RedisRefreshTokenService redisRefreshTokenService, RedisBlackTokenService redisBlackTokenService) {
-        this.authenticationConfiguration = authenticationConfiguration;
-        this.jwtUtil = jwtUtil;
-        this.roleRepository = roleRepository;
-        this.redisRefreshTokenService = redisRefreshTokenService;
-        this.redisBlackTokenService = redisBlackTokenService;
-    }
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         http
                 .authorizeHttpRequests((auth -> auth
                         .requestMatchers(allAllowPage).permitAll()
@@ -71,7 +61,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new JWTFilter(jwtUtil, roleRepository, redisRefreshTokenService, redisBlackTokenService), LoginFilter.class)
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, redisRefreshTokenService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(new LoginFilter(authenticationManager, jwtUtil, redisRefreshTokenService), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(corsCustomizer -> corsCustomizer.configurationSource((CorsConfigurationSource) request -> {
 
@@ -90,12 +80,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }
