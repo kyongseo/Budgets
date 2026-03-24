@@ -163,3 +163,34 @@ make swagger-update
 ## 📚 프로젝트 관리
 - API 문서: [Swagger API](https://kyongseo.github.io/Budgets/#/)
 - 일정 관리: [일정관리](https://www.notion.so/b7b4131ed6874ff6825c62499d183230)
+
+
+
+
+---
+- env 파일 예시
+```bash
+# 공통 Postgresql 설정
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=budgetdb
+POSTGRES_USER=ks
+POSTGRES_PASSWORD=1234!
+POSTGRESQL_URL=jdbc:postgresql://localhost:5432/budgetdb
+
+# 공통 redis 설정
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=1234!
+
+# 공통 kafka 설정
+KAFKA_SERVER=localhost:9092
+KAFKA_GROUP_ID=chat-websocket-group
+
+# mail
+MAIL_USERNAME=pokj9800113@gmail.com
+MAIL_PASSWORD=amui cqpl xmyi fvdt
+
+# JWT 설정
+JWT_SECRET=vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb
+```
